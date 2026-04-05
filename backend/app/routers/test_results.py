@@ -28,6 +28,8 @@ class TestResultCreate(BaseModel):
 
 class TestResultResponse(BaseModel):
     id: str
+    user_id: str        # ← qo'shing
+    username: str
     test_id: str
     test_name: str
     score: Optional[int]
@@ -67,7 +69,7 @@ def save_result(
         db.add(result)
         db.commit()
         db.refresh(result)
-        return _to_response(result)
+        return _to_response(result, db)
     except Exception as e:
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
@@ -87,7 +89,7 @@ def get_my_results(
         if test_id:
             query = query.filter(TestResult.test_id == test_id)
         results = query.order_by(desc(TestResult.created_at)).limit(limit).all()
-        return [_to_response(r) for r in results]
+        return [_to_response(r, db) for r in results]
     except Exception as e:
         return []
 
@@ -122,7 +124,7 @@ def get_stats(
             unique_tests=unique,
             last_test=last,
             most_taken=most_taken,
-            results=[_to_response(r) for r in results[:10]],
+            results=[_to_response(r, db) for r in results[:10]],
         )
     except Exception as e:
         return TestStatsResponse(
@@ -154,9 +156,16 @@ def delete_result(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def _to_response(r) -> TestResultResponse:
+def _to_response(r, db=None) -> TestResultResponse:
+    username = "Noma'lum"
+    if db:
+        user = db.query(User).filter(User.id == r.user_id).first()
+        if user:
+            username = user.username or user.email
     return TestResultResponse(
         id=str(r.id),
+        user_id=str(r.user_id),
+        username=username,
         test_id=r.test_id,
         test_name=r.test_name,
         score=r.score,
