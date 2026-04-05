@@ -1,0 +1,386 @@
+/* ═══════════════════════════════════════════════════════════════
+   AdminUpload.css  —  MindAura Admin Fayl Yuklash
+   Import: import "./AdminUpload.css"; AdminUpload.js ichida
+═══════════════════════════════════════════════════════════════ */
+
+/* ── O'zgaruvchilar ─────────────────────────────────────────── */
+.au-root {
+  --au-primary:    #7c6bc9;
+  --au-primary-dk: #5a4fb5;
+  --au-accent:     #00b894;
+  --au-bg:         #13111e;
+  --au-surface:    #1e1b2e;
+  --au-surface2:   #252238;
+  --au-border:     #2e2a45;
+  --au-text:       #e2e0f0;
+  --au-muted:      #8b87aa;
+  --au-success-bg: rgba(0,184,148,0.12);
+  --au-success-cl: #4ade80;
+  --au-error-bg:   rgba(229,62,62,0.12);
+  --au-error-cl:   #fc8181;
+  --au-radius:     12px;
+  --au-transition: 0.18s ease;
+
+  padding: 28px 0;
+  color: var(--au-text);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Tab tugmalari ───────────────────────────────────────────── */
+.au-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 26px;
+}
+
+.au-tab-btn {
+  padding: 9px 20px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  transition: background var(--au-transition), color var(--au-transition);
+  background: var(--au-surface2);
+  color: var(--au-muted);
+}
+
+.au-tab-btn:hover { color: var(--au-text); }
+
+.au-tab-btn.active {
+  background: var(--au-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+/* ── Alert xabarlari ─────────────────────────────────────────── */
+.au-alert {
+  border-radius: var(--au-radius);
+  padding: 11px 16px;
+  font-size: 14px;
+  margin-bottom: 18px;
+  border: 1px solid transparent;
+}
+
+.au-alert.success {
+  background: var(--au-success-bg);
+  border-color: rgba(0,184,148,0.3);
+  color: var(--au-success-cl);
+}
+
+.au-alert.error {
+  background: var(--au-error-bg);
+  border-color: rgba(229,62,62,0.3);
+  color: var(--au-error-cl);
+}
+
+/* ── Upload Form ─────────────────────────────────────────────── */
+.au-form {
+  max-width: 640px;
+}
+
+.au-form-row {
+  margin-bottom: 18px;
+}
+
+.au-form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.au-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--au-muted);
+  margin-bottom: 7px;
+  letter-spacing: 0.2px;
+}
+
+.au-label .optional {
+  font-weight: 400;
+  color: #5a566e;
+  margin-left: 4px;
+}
+
+.au-input,
+.au-textarea,
+.au-select {
+  width: 100%;
+  background: var(--au-surface2);
+  border: 1.5px solid var(--au-border);
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 14px;
+  color: var(--au-text);
+  outline: none;
+  font-family: inherit;
+  transition: border-color var(--au-transition), box-shadow var(--au-transition);
+  box-sizing: border-box;
+}
+
+.au-input::placeholder,
+.au-textarea::placeholder { color: var(--au-muted); }
+
+.au-input:focus,
+.au-textarea:focus,
+.au-select:focus {
+  border-color: var(--au-primary);
+  box-shadow: 0 0 0 3px rgba(124,107,201,0.18);
+}
+
+.au-textarea { resize: none; height: 84px; }
+
+.au-select { cursor: pointer; }
+.au-select option { background: #1e1b2e; }
+
+/* ── Fayl drop zone ──────────────────────────────────────────── */
+.au-dropzone {
+  border: 2px dashed var(--au-border);
+  border-radius: var(--au-radius);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--au-transition), background var(--au-transition);
+  background: var(--au-surface2);
+}
+
+.au-dropzone:hover {
+  border-color: var(--au-primary);
+  background: rgba(124,107,201,0.07);
+}
+
+.au-dropzone.has-file {
+  border-color: rgba(0,184,148,0.45);
+  background: rgba(0,184,148,0.07);
+}
+
+.au-dropzone-icon { font-size: 34px; margin-bottom: 8px; }
+
+.au-dropzone-title {
+  font-size: 14px;
+  color: var(--au-text);
+  margin: 0 0 4px;
+}
+
+.au-dropzone-title.success { color: var(--au-accent); font-weight: 600; }
+
+.au-dropzone-sub {
+  font-size: 12px;
+  color: var(--au-muted);
+  margin: 0;
+}
+
+/* ── Cover preview ───────────────────────────────────────────── */
+.au-cover-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.au-cover-zone {
+  flex: 1;
+  border: 2px dashed var(--au-border);
+  border-radius: var(--au-radius);
+  padding: 18px;
+  text-align: center;
+  cursor: pointer;
+  background: var(--au-surface2);
+  transition: border-color var(--au-transition);
+  min-height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.au-cover-zone:hover { border-color: var(--au-primary); }
+
+.au-cover-zone img {
+  height: 80px;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.au-cover-icon { font-size: 26px; opacity: 0.5; }
+
+.au-cover-hint { font-size: 12px; color: var(--au-muted); }
+
+.au-cover-remove {
+  background: none;
+  border: none;
+  color: var(--au-error-cl);
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+/* ── Toggle checkboxlar ──────────────────────────────────────── */
+.au-toggles {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+
+.au-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--au-text);
+  user-select: none;
+}
+
+.au-toggle-label input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--au-primary);
+  cursor: pointer;
+}
+
+/* ── Submit tugma ────────────────────────────────────────────── */
+.au-submit-btn {
+  width: 100%;
+  padding: 13px 0;
+  border-radius: var(--au-radius);
+  border: none;
+  background: var(--au-primary);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--au-transition), opacity var(--au-transition);
+  letter-spacing: 0.3px;
+}
+
+.au-submit-btn:hover:not(:disabled) { background: var(--au-primary-dk); }
+
+.au-submit-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Resource ro'yxati ───────────────────────────────────────── */
+.au-list { display: flex; flex-direction: column; gap: 10px; }
+
+.au-list-item {
+  background: var(--au-surface);
+  border: 1px solid var(--au-border);
+  border-radius: var(--au-radius);
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: border-color var(--au-transition);
+}
+
+.au-list-item:hover { border-color: rgba(124,107,201,0.3); }
+
+.au-list-icon { font-size: 22px; flex-shrink: 0; }
+
+.au-list-info { flex: 1; min-width: 0; }
+
+.au-list-title {
+  margin: 0;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--au-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.au-list-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 5px;
+  flex-wrap: wrap;
+}
+
+.au-list-author { font-size: 12px; color: var(--au-muted); }
+
+.au-list-downloads { font-size: 12px; color: var(--au-muted); }
+
+.au-status-badge {
+  font-size: 11px;
+  padding: 2px 9px;
+  border-radius: 20px;
+  border: 1px solid transparent;
+}
+
+.au-status-badge.published {
+  background: rgba(0,184,148,0.12);
+  border-color: rgba(0,184,148,0.25);
+  color: #4ade80;
+}
+
+.au-status-badge.draft {
+  background: var(--au-surface2);
+  border-color: var(--au-border);
+  color: var(--au-muted);
+}
+
+.au-delete-btn {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(229,62,62,0.3);
+  background: rgba(229,62,62,0.08);
+  color: #fc8181;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--au-transition), border-color var(--au-transition);
+}
+
+.au-delete-btn:hover {
+  background: rgba(229,62,62,0.18);
+  border-color: rgba(229,62,62,0.5);
+}
+
+/* ── Skeleton ────────────────────────────────────────────────── */
+.au-skeleton-item {
+  background: var(--au-surface);
+  border: 1px solid var(--au-border);
+  border-radius: var(--au-radius);
+  padding: 16px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.au-skel-box {
+  background: var(--au-surface2);
+  border-radius: 8px;
+  animation: au-shimmer 1.6s infinite;
+}
+
+@keyframes au-shimmer {
+  0%, 100% { opacity: 0.5; }
+  50%       { opacity: 1; }
+}
+
+/* ── Bo'sh holat ─────────────────────────────────────────────── */
+.au-empty {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--au-muted);
+}
+
+.au-empty p:first-child { font-size: 36px; margin-bottom: 8px; }
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 600px) {
+  .au-form-grid { grid-template-columns: 1fr; }
+  .au-toggles { flex-direction: column; gap: 12px; }
+}

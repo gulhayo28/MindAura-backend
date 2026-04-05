@@ -1,0 +1,549 @@
+/* ═══════════════════════════════════════════════════════════════
+   Library.css  —  MindAura Kutubxona sahifasi
+   Mavjud App.css ga mos, biroz dark variant
+   Import: import "./Library.css"; Library.js ichida
+═══════════════════════════════════════════════════════════════ */
+
+/* ── O'zgaruvchilar ─────────────────────────────────────────── */
+.library-root {
+  --lib-primary:    #7c6bc9;
+  --lib-primary-dk: #5a4fb5;
+  --lib-accent:     #00b894;
+  --lib-bg:         #13111e;
+  --lib-surface:    #1e1b2e;
+  --lib-surface2:   #252238;
+  --lib-border:     #2e2a45;
+  --lib-text:       #e2e0f0;
+  --lib-muted:      #8b87aa;
+  --lib-badge-bg:   rgba(124,107,201,0.18);
+  --lib-radius:     14px;
+  --lib-shadow:     0 4px 24px rgba(0,0,0,0.35);
+  --lib-transition: 0.2s ease;
+
+  min-height: 100vh;
+  background: var(--lib-bg);
+  color: var(--lib-text);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.lib-header {
+  background: var(--lib-surface);
+  border-bottom: 1px solid var(--lib-border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  padding: 14px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  backdrop-filter: blur(12px);
+}
+
+.lib-header-title {
+  margin: 0;
+  font-size: 21px;
+  font-weight: 800;
+  color: var(--lib-text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lib-header-title span.lib-count {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--lib-muted);
+}
+
+/* ── Qidiruv ─────────────────────────────────────────────────── */
+.lib-search-wrap {
+  position: relative;
+}
+
+.lib-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--lib-muted);
+  font-size: 15px;
+  pointer-events: none;
+}
+
+.lib-search-input {
+  background: var(--lib-surface2);
+  border: 1.5px solid var(--lib-border);
+  border-radius: 10px;
+  padding: 8px 36px 8px 36px;
+  font-size: 14px;
+  color: var(--lib-text);
+  width: 260px;
+  outline: none;
+  transition: border-color var(--lib-transition), box-shadow var(--lib-transition);
+  font-family: inherit;
+}
+
+.lib-search-input::placeholder { color: var(--lib-muted); }
+
+.lib-search-input:focus {
+  border-color: var(--lib-primary);
+  box-shadow: 0 0 0 3px rgba(124,107,201,0.18);
+}
+
+.lib-search-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--lib-muted);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 0;
+  line-height: 1;
+  transition: color var(--lib-transition);
+}
+
+.lib-search-clear:hover { color: var(--lib-text); }
+
+/* ── Layout ──────────────────────────────────────────────────── */
+.lib-layout {
+  display: flex;
+  gap: 24px;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 28px 24px 60px;
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.lib-sidebar {
+  width: 210px;
+  flex-shrink: 0;
+  background: var(--lib-surface);
+  border: 1px solid var(--lib-border);
+  border-radius: var(--lib-radius);
+  padding: 18px 14px;
+  align-self: flex-start;
+  position: sticky;
+  top: 76px;
+}
+
+.lib-filter-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--lib-muted);
+  margin-bottom: 8px;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+.lib-filter-group {
+  margin-bottom: 22px;
+}
+
+.lib-filter-btn {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 8px 12px;
+  margin-bottom: 2px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+  transition: background var(--lib-transition), color var(--lib-transition);
+  background: transparent;
+  color: var(--lib-muted);
+}
+
+.lib-filter-btn:hover {
+  background: var(--lib-surface2);
+  color: var(--lib-text);
+}
+
+.lib-filter-btn.active {
+  background: var(--lib-primary);
+  color: #fff;
+  font-weight: 600;
+}
+
+.lib-sort-select {
+  width: 100%;
+  background: var(--lib-surface2);
+  border: 1.5px solid var(--lib-border);
+  border-radius: 9px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--lib-text);
+  outline: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color var(--lib-transition);
+}
+
+.lib-sort-select:focus { border-color: var(--lib-primary); }
+
+.lib-filter-reset {
+  margin-top: 16px;
+  width: 100%;
+  background: transparent;
+  border: 1.5px solid var(--lib-primary);
+  border-radius: 9px;
+  color: var(--lib-primary);
+  font-size: 13px;
+  padding: 7px 0;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background var(--lib-transition), color var(--lib-transition);
+}
+
+.lib-filter-reset:hover {
+  background: var(--lib-primary);
+  color: #fff;
+}
+
+/* ── Asosiy kontent ──────────────────────────────────────────── */
+.lib-main { flex: 1; min-width: 0; }
+
+/* Xato xabari */
+.lib-error {
+  background: rgba(229, 62, 62, 0.12);
+  border: 1px solid rgba(229, 62, 62, 0.3);
+  color: #fc8181;
+  border-radius: 10px;
+  padding: 12px 16px;
+  font-size: 14px;
+  margin-bottom: 18px;
+}
+
+/* ── Kartalar grid ───────────────────────────────────────────── */
+.lib-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 18px;
+}
+
+/* ── Skeleton loading ────────────────────────────────────────── */
+.lib-skeleton {
+  background: var(--lib-surface);
+  border: 1px solid var(--lib-border);
+  border-radius: var(--lib-radius);
+  padding: 16px;
+  overflow: hidden;
+}
+
+.lib-skel-img {
+  background: var(--lib-surface2);
+  height: 140px;
+  border-radius: 10px;
+  margin-bottom: 14px;
+  animation: lib-shimmer 1.6s infinite;
+}
+
+.lib-skel-line {
+  background: var(--lib-surface2);
+  border-radius: 6px;
+  margin-bottom: 8px;
+  animation: lib-shimmer 1.6s infinite;
+}
+
+@keyframes lib-shimmer {
+  0%   { opacity: 0.6; }
+  50%  { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* ── Bo'sh holat ─────────────────────────────────────────────── */
+.lib-empty {
+  text-align: center;
+  padding: 80px 24px;
+}
+
+.lib-empty-icon { font-size: 52px; margin-bottom: 14px; }
+
+.lib-empty h3 {
+  font-size: 17px;
+  color: var(--lib-text);
+  margin-bottom: 6px;
+}
+
+.lib-empty p { font-size: 14px; color: var(--lib-muted); }
+
+/* ── Resource Card ───────────────────────────────────────────── */
+.lib-card {
+  background: var(--lib-surface);
+  border: 1px solid var(--lib-border);
+  border-radius: var(--lib-radius);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--lib-transition), box-shadow var(--lib-transition), border-color var(--lib-transition);
+  cursor: default;
+}
+
+.lib-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45), 0 0 0 1px rgba(124,107,201,0.25);
+  border-color: rgba(124,107,201,0.35);
+}
+
+/* Muqova */
+.lib-card-cover {
+  height: 148px;
+  background: linear-gradient(135deg, #1e1635 0%, #1a2340 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.lib-card-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.lib-card-cover-icon {
+  font-size: 54px;
+  opacity: 0.25;
+}
+
+.lib-card-featured {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: #f59e0b;
+  color: #78350f;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+}
+
+/* Kontent */
+.lib-card-body {
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.lib-card-badges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 9px;
+}
+
+.lib-badge-cat {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.2px;
+}
+
+/* Kategoriya ranglari */
+.lib-cat-anxiety       { background: rgba(245,158,11,0.15); color: #fbbf24; }
+.lib-cat-self_growth   { background: rgba(0,184,148,0.15);  color: #00b894; }
+.lib-cat-relationships { background: rgba(236,72,153,0.15); color: #f472b6; }
+.lib-cat-therapy       { background: rgba(59,130,246,0.15); color: #60a5fa; }
+.lib-cat-depression    { background: rgba(139,92,246,0.15); color: #a78bfa; }
+.lib-cat-mindfulness   { background: rgba(20,184,166,0.15); color: #2dd4bf; }
+.lib-cat-other         { background: rgba(148,163,184,0.15);color: #94a3b8; }
+
+.lib-badge-type {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.lib-card-title {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--lib-text);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lib-card-author {
+  margin: 0 0 7px;
+  font-size: 12px;
+  color: var(--lib-muted);
+}
+
+.lib-card-desc {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: #9490b5;
+  line-height: 1.55;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.lib-card-meta {
+  display: flex;
+  gap: 10px;
+  font-size: 11px;
+  color: var(--lib-muted);
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* Download tugmasi */
+.lib-dl-btn {
+  width: 100%;
+  padding: 9px 0;
+  border-radius: 9px;
+  border: none;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: background var(--lib-transition), opacity var(--lib-transition);
+  background: var(--lib-primary);
+  color: #fff;
+}
+
+.lib-dl-btn:hover:not(:disabled) { background: var(--lib-primary-dk); }
+
+.lib-dl-btn:disabled {
+  background: var(--lib-surface2);
+  color: var(--lib-muted);
+  cursor: not-allowed;
+}
+
+.lib-dl-btn.loading { opacity: 0.75; }
+
+@keyframes lib-spin {
+  to { transform: rotate(360deg); }
+}
+
+.lib-spin {
+  display: inline-block;
+  animation: lib-spin 0.9s linear infinite;
+}
+
+/* Fayl yo'q */
+.lib-no-file {
+  width: 100%;
+  padding: 9px 0;
+  border-radius: 9px;
+  background: var(--lib-surface2);
+  color: var(--lib-muted);
+  font-size: 13px;
+  text-align: center;
+  border: 1px solid var(--lib-border);
+}
+
+/* ── Pagination ───────────────────────────────────────────────── */
+.lib-pagination {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+}
+
+.lib-page-btn {
+  padding: 8px 16px;
+  border-radius: 9px;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--lib-transition);
+  border: 1.5px solid var(--lib-border);
+  background: var(--lib-surface);
+  color: var(--lib-muted);
+}
+
+.lib-page-btn:hover:not(:disabled) {
+  border-color: var(--lib-primary);
+  color: var(--lib-primary);
+}
+
+.lib-page-btn.active {
+  background: var(--lib-primary);
+  border-color: var(--lib-primary);
+  color: #fff;
+  font-weight: 700;
+}
+
+.lib-page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Responsive ───────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .lib-sidebar { display: none; }
+  .lib-layout { padding: 16px; }
+}
+
+@media (max-width: 600px) {
+  .lib-header { padding: 12px 16px; }
+  .lib-search-input { width: 200px; }
+  .lib-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+}
+
+@media (max-width: 420px) {
+  .lib-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Mobil kategoriya chips ──────────────────────────────────── */
+.lib-mobile-cats {
+  display: none;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 0 16px 4px;
+  margin-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.lib-mobile-cats::-webkit-scrollbar { display: none; }
+
+@media (max-width: 900px) {
+  .lib-mobile-cats { display: flex; }
+}
+
+.lib-chip {
+  flex-shrink: 0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--lib-border);
+  background: var(--lib-surface);
+  color: var(--lib-muted);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--lib-transition);
+  white-space: nowrap;
+}
+
+.lib-chip:hover { border-color: var(--lib-primary); color: var(--lib-primary); }
+
+.lib-chip.active {
+  background: var(--lib-primary);
+  border-color: var(--lib-primary);
+  color: #fff;
+}

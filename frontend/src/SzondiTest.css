@@ -1,0 +1,57 @@
+.szondi-intro{max-width:500px;margin:0 auto;padding:32px 20px;text-align:center}
+.szondi-intro-icon{font-size:64px;margin-bottom:16px}
+.szondi-intro h2{font-size:26px;font-weight:700;color:#1a1a2e;margin-bottom:12px}
+.szondi-intro p{font-size:14px;color:#666;line-height:1.7;margin-bottom:24px}
+.szondi-rules{display:flex;flex-direction:column;gap:10px;background:#f8f6ff;border-radius:16px;padding:20px;margin-bottom:28px;text-align:left}
+.rule-item{display:flex;gap:12px;align-items:center;font-size:14px;color:#444}
+.rule-item span:first-child{font-size:20px;flex-shrink:0}
+.szondi-start-btn{width:100%;padding:14px;background:#553c9a;color:white;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;margin-bottom:10px;transition:opacity .2s}
+.szondi-start-btn:hover{opacity:.9}
+.szondi-back-btn{width:100%;padding:12px;background:none;border:1.5px solid #e2e8f0;color:#666;border-radius:14px;font-size:14px;cursor:pointer}
+.szondi-back-btn:hover{border-color:#553c9a;color:#553c9a}
+
+.szondi-test{max-width:600px;margin:0 auto;padding:24px 20px}
+.szondi-header{text-align:center;margin-bottom:24px}
+.szondi-progress{display:flex;justify-content:center;gap:8px;margin-bottom:8px}
+.sp-dot{width:12px;height:12px;border-radius:50%;background:#e2e8f0;transition:all .2s}
+.sp-dot.done{background:#22c55e}
+.sp-dot.active{background:#553c9a;transform:scale(1.3)}
+.szondi-series-label{font-size:13px;color:#888;margin-bottom:6px}
+.szondi-instruction{font-size:15px;color:#444;font-weight:500}
+.sel-count{color:#553c9a;font-weight:600}
+
+.szondi-faces{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.szondi-face{background:white;border-radius:16px;padding:8px;cursor:pointer;border:2.5px solid #e2e8f0;transition:all .2s;position:relative;text-align:center}
+.szondi-face:hover{border-color:var(--face-color, #553c9a);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.szondi-face.selected{border-color:#553c9a;background:#f5f3ff;transform:translateY(-3px);box-shadow:0 6px 20px rgba(85,60,154,.2)}
+.szondi-face.dimmed{opacity:.4}
+.face-svg{width:100%;aspect-ratio:1}
+.face-check{position:absolute;top:-8px;right:-8px;width:24px;height:24px;background:#553c9a;color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;box-shadow:0 2px 8px rgba(85,60,154,.4)}
+
+.szondi-next-btn{width:100%;padding:14px;background:#553c9a;color:white;border:none;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
+.szondi-next-btn:disabled{opacity:.4;cursor:not-allowed}
+.szondi-next-btn:not(:disabled):hover{opacity:.9}
+
+.szondi-result{max-width:560px;margin:0 auto;padding:32px 20px;text-align:center}
+.szondi-chart{background:#f8f8f8;border-radius:16px;padding:20px;margin-bottom:20px;text-align:left}
+.szondi-chart h3{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:14px}
+.chart-bars{display:flex;flex-direction:column;gap:8px}
+.chart-bar-item{display:flex;align-items:center;gap:10px}
+.chart-bar-label{font-size:12px;color:#555;min-width:72px}
+.chart-bar-track{flex:1;height:10px;background:#e2e8f0;border-radius:999px;overflow:hidden}
+.chart-bar-fill{height:100%;border-radius:999px;transition:width .6s;opacity:.8}
+.chart-bar-val{font-size:12px;font-weight:600;color:#444;min-width:24px}
+
+.result-advice{background:#f8f6ff;border-radius:20px;padding:20px;margin-bottom:0;text-align:left}
+.result-advice h3{font-size:15px;font-weight:700;color:#1a1a2e;margin-bottom:14px}
+.advice-item{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px;font-size:14px;color:#444;line-height:1.5}
+.advice-num{width:24px;height:24px;border-radius:50%;background:#553c9a;color:white;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.psych-box{display:flex;gap:12px;align-items:flex-start;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:16px;padding:16px;text-align:left}
+.test-retry-btn{background:#553c9a;color:white;border:none;padding:13px 28px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;width:100%;display:block}
+.test-back-btn{background:none;border:1.5px solid #e2e8f0;color:#666;padding:12px 28px;border-radius:12px;font-size:14px;cursor:pointer;width:100%;display:block}
+.test-back-btn:hover{border-color:#553c9a;color:#553c9a}
+
+@media(max-width:480px){
+  .szondi-faces{grid-template-columns:repeat(4,1fr);gap:8px}
+  .face-svg{width:100%}
+}

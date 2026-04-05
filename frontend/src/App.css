@@ -1,0 +1,115 @@
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Segoe UI', sans-serif; color: #1a202c; }
+.app { min-height: 100vh; }
+
+.nav-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-username {
+  font-size: 14px;
+  color: #553c9a;
+  font-weight: 500;
+}
+
+.nav-btn-outline {
+  background: transparent;
+  border: 1.5px solid #553c9a;
+  color: #553c9a;
+}
+
+/* NAVBAR */
+.navbar { display: flex; align-items: center; justify-content: space-between; padding: 16px 60px; background: #fff; box-shadow: 0 1px 8px rgba(0,0,0,0.07); position: sticky; top: 0; z-index: 100; }
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #553c9a;
+  cursor: pointer;
+}
+.nav-links { display: flex; align-items: center; gap: 28px; list-style: none; }
+.nav-links a { text-decoration: none; color: #4a5568; font-size: 15px; transition: color 0.2s; }
+.nav-links a:hover { color: #553c9a; }
+.nav-btn { background: #553c9a; color: #fff; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 14px; }
+.burger { display: none; font-size: 24px; cursor: pointer; }
+
+/* HERO */
+.hero { display: flex; align-items: center; justify-content: space-between; padding: 80px 60px; background: linear-gradient(135deg, #f5f0ff 0%, #eef2ff 100%); gap: 40px; }
+.hero-content { max-width: 540px; }
+.hero-badge { background: #e9d8fd; color: #553c9a; font-size: 13px; font-weight: 600; padding: 6px 14px; border-radius: 999px; display: inline-block; margin-bottom: 20px; }
+.hero-content h1 { font-size: 48px; font-weight: 800; line-height: 1.15; margin-bottom: 20px; color: #1a202c; }
+.accent { color: #553c9a; }
+.hero-content p { font-size: 17px; color: #4a5568; line-height: 1.7; margin-bottom: 32px; }
+.hero-btns { display: flex; gap: 14px; margin-bottom: 40px; flex-wrap: wrap; }
+.btn-primary { background: #553c9a; color: #fff; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; transition: background 0.2s; }
+.btn-primary:hover { background: #44307a; }
+.btn-secondary { background: #fff; color: #553c9a; border: 2px solid #553c9a; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-size: 15px; font-weight: 600; }
+.hero-stats { display: flex; gap: 32px; }
+.stat strong { display: block; font-size: 26px; font-weight: 800; color: #553c9a; }
+.stat span { font-size: 13px; color: #718096; }
+
+/* HERO CARD */
+.hero-img { flex-shrink: 0; }
+.hero-card { background: #fff; border-radius: 20px; padding: 24px; width: 300px; box-shadow: 0 8px 32px rgba(85,60,154,0.12); }
+.hcard-top { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.avatar { font-size: 40px; }
+.hcard-name { font-weight: 700; font-size: 15px; }
+.hcard-role { font-size: 12px; color: #718096; }
+.online-dot { width: 10px; height: 10px; background: #48bb78; border-radius: 50%; margin-left: auto; flex-shrink: 0; }
+.hcard-msg { font-size: 13px; color: #4a5568; font-style: italic; line-height: 1.5; }
+
+/* SERVICES */
+.services { padding: 80px 60px; background: #fff; text-align: center; }
+.services h2, .psychologists h2, .stats-section h2 { font-size: 34px; font-weight: 800; margin-bottom: 10px; }
+.section-sub { color: #718096; font-size: 16px; margin-bottom: 48px; }
+.services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; max-width: 900px; margin: 0 auto; }
+.service-card { background: #f9f5ff; border-radius: 16px; padding: 32px 24px; text-align: center; transition: transform 0.2s, box-shadow 0.2s; }
+.service-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(85,60,154,0.1); }
+.service-icon { font-size: 36px; display: block; margin-bottom: 14px; }
+.service-card h3 { font-size: 17px; font-weight: 700; margin-bottom: 8px; color: #1a202c; }
+.service-card p { font-size: 14px; color: #718096; line-height: 1.6; }
+
+/* PSYCHOLOGISTS */
+.psychologists { padding: 80px 60px; background: #f7fafc; text-align: center; }
+.psych-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 24px; max-width: 860px; margin: 0 auto; }
+.psych-card { background: #fff; border-radius: 16px; padding: 28px 20px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.psych-avatar { font-size: 54px; margin-bottom: 12px; }
+.psych-card h3 { font-size: 16px; font-weight: 700; margin-bottom: 4px; }
+.psych-spec { font-size: 13px; color: #553c9a; font-weight: 600; margin-bottom: 12px; }
+.psych-meta { display: flex; justify-content: center; gap: 16px; font-size: 13px; color: #718096; }
+
+/* STATS */
+.stats-section { padding: 80px 60px; background: #553c9a; text-align: center; }
+.stats-section h2 { color: #fff; margin-bottom: 48px; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 24px; max-width: 860px; margin: 0 auto; }
+.stat-block { background: rgba(255,255,255,0.12); border-radius: 16px; padding: 28px 20px; }
+.stat-block strong { display: block; font-size: 36px; font-weight: 800; color: #fff; margin-bottom: 8px; }
+.stat-block p { font-size: 14px; color: #e9d8fd; line-height: 1.5; }
+
+/* FOOTER */
+.footer { background: #1a202c; padding: 40px 60px; }
+.footer-inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+.footer .nav-logo { color: #e9d8fd; }
+.footer-links { color: #718096; font-size: 13px; }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .navbar { padding: 16px 24px; }
+  .nav-links { display: none; flex-direction: column; position: absolute; top: 64px; left: 0; right: 0; background: #fff; padding: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .nav-links.open { display: flex; }
+  .burger { display: block; }
+  .hero { flex-direction: column; padding: 48px 24px; text-align: center; }
+  .hero-content h1 { font-size: 34px; }
+  .hero-img { display: none; }
+  .hero-stats { justify-content: center; }
+  .services, .psychologists, .stats-section { padding: 60px 24px; }
+  .footer { padding: 32px 24px; }
+  .footer-inner { flex-direction: column; text-align: center; }
+}
+
+/* Active nav link */
+.nav-links a.active-link { color: #553c9a; font-weight: 700; }
