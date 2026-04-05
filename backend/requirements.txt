@@ -10,9 +10,9 @@ anthropic          # Claude API
 pypdf2             # PDF o'qish
 python-docx        # .doc/.docx o'qish
 sentence-transformers  # embedding (bepul, local)
-numpy
+python-dotenv       # .env fayllarini o'qish
 pgvector         # PostgreSQL uchun vektor ma'lumotlar bazasi kengaytmasi
 google-generativeai
 bcrypt
 alembic
-
+numpy
