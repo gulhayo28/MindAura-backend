@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User
 from app.config import settings
+from pydantic import BaseModel
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto", bcrypt__rounds=12)
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
@@ -52,3 +53,26 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     if user is None:
         raise credentials_exception
     return user
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    full_name: str | None = None
+
+@router.patch("/update", response_model=UserResponse)
+def update_profile(
+    data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if data.username and data.username != current_user.username:
+        existing = db.query(User).filter(User.username == data.username).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Bu username band")
+        current_user.username = data.username
+    
+    if data.full_name is not None:
+        current_user.full_name = data.full_name
+    
+    db.commit()
+    db.refresh(current_user)
+    return current_user

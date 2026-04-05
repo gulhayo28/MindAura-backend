@@ -10,6 +10,62 @@ from app.auth import get_current_user
 
 router = APIRouter()
 
+@router.get("/analytics")
+def get_analytics(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        from app.models import ChallengeProgress
+        from datetime import datetime, timedelta
+        
+        results = db.query(ChallengeProgress).filter(
+            ChallengeProgress.user_id == current_user.id
+        ).all()
+        
+        total_days = len(results)
+        unique_challenges = len(set(r.challenge_id for r in results))
+        
+        # Haftalik ma'lumot
+        days = ["Du", "Se", "Ch", "Pa", "Ju", "Sh", "Ya"]
+        weekly = []
+        for i, day in enumerate(days):
+            count = sum(1 for r in results 
+                if r.completed_at.weekday() == i)
+            weekly.append({"day": day, "completed": count})
+        
+        return {
+            "total_days_completed": total_days,
+            "total_challenges": unique_challenges,
+            "completed_challenges": unique_challenges,
+            "completion_rate": min(100, round((total_days / max(unique_challenges * 7, 1)) * 100)),
+            "weekly_data": weekly,
+            "current_streak": min(total_days, 7),
+        }
+    except Exception as e:
+        return {
+            "total_days_completed": 0,
+            "total_challenges": 0,
+            "completed_challenges": 0,
+            "completion_rate": 0,
+            "weekly_data": [],
+            "current_streak": 0,
+        }
+
+@router.get("/streak")
+def get_streak(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        from app.models import ChallengeProgress
+        results = db.query(ChallengeProgress).filter(
+            ChallengeProgress.user_id == current_user.id
+        ).all()
+        return {"current_streak": min(len(results), 7)}
+    except:
+        return {"current_streak": 0}
+
 @router.post("/daily", response_model=DailyProgressResponse)
 def complete_daily(
     data: DailyProgressCreate,

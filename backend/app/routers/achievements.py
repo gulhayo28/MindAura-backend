@@ -8,6 +8,13 @@ from app.auth import get_current_user
 
 # ─── ACHIEVEMENTS ─────────────────────────────────────────
 router = APIRouter()
+@router.get("/my")
+def get_my_achievements(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    return []
+
 
 @router.get("", response_model=List[AchievementResponse])
 def get_all_achievements(db: Session = Depends(get_db)):

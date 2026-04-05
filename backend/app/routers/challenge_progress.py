@@ -9,6 +9,27 @@ from app.models import User
 
 router = APIRouter()
 
+@router.get("/my")
+def get_my_challenges(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        from app.models import ChallengeProgress
+        results = db.query(ChallengeProgress).filter(
+            ChallengeProgress.user_id == current_user.id
+        ).order_by(desc(ChallengeProgress.completed_at)).all()
+        return [{
+            "id": str(r.id),
+            "challenge_id": r.challenge_id,
+            "challenge_title": r.challenge_title,
+            "day_number": r.day_number,
+            "status": "active",
+            "completed_at": r.completed_at.isoformat(),
+        } for r in results]
+    except Exception as e:
+        return []
+
 class ChallengeProgressCreate(BaseModel):
     challenge_id: str
     challenge_title: str
