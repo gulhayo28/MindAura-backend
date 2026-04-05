@@ -9,6 +9,7 @@ from app.routers import auth, challenges, progress, community, achievements, rec
 from app.routers import ai_chat
 from app.routers import resources  
 from app.routers import test_results
+from app.routers import challenge_progress
 
 
 

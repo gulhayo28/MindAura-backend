@@ -43,3 +43,29 @@ def login(data: UserLogin, db: Session = Depends(get_db)):
 @router.get("/me", response_model=UserResponse)
 def get_me(current_user: User = Depends(get_current_user)):
     return current_user
+
+
+from pydantic import BaseModel
+
+class UserUpdate(BaseModel):
+    username: str | None = None
+    full_name: str | None = None
+
+@router.patch("/update", response_model=UserResponse)
+def update_profile(
+    data: UserUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if data.username and data.username != current_user.username:
+        existing = db.query(User).filter(User.username == data.username).first()
+        if existing:
+            raise HTTPException(status_code=400, detail="Bu username band")
+        current_user.username = data.username
+    
+    if data.full_name is not None:
+        current_user.full_name = data.full_name
+    
+    db.commit()
+    db.refresh(current_user)
+    return current_user
