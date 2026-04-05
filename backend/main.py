@@ -40,6 +40,7 @@ app.include_router(ai_chat.router, prefix="/ai", tags=["AI Chat"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
 app.include_router(resources.router, prefix="/resources", tags=["Kutubxona"])
 app.include_router(test_results.router, prefix="/test-results", tags=["Test natijalari"])
+app.include_router(challenge_progress.router, prefix="/challenge-progress", tags=["Challenge progress"])
 
 Base.metadata.create_all(bind=engine)
 

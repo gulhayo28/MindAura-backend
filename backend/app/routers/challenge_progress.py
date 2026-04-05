@@ -50,7 +50,8 @@ def save_progress(
         db.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/", response_model=List[ChallengeProgressResponse])
+# ✅ O'ZGARISH: /  →  /my
+@router.get("/my", response_model=List[ChallengeProgressResponse])
 def get_my_progress(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
