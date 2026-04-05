@@ -69,3 +69,33 @@ def update_profile(
     db.commit()
     db.refresh(current_user)
     return current_user
+
+from jose import JWTError, jwt
+from app.config import settings
+
+class RefreshRequest(BaseModel):
+    refresh_token: str
+
+@router.post("/refresh", response_model=TokenResponse)
+def refresh_token(data: RefreshRequest, db: Session = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Refresh token noto'g'ri yoki muddati tugagan",
+    )
+    try:
+        payload = jwt.decode(data.refresh_token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        user_id: str = payload.get("sub")
+        token_type: str = payload.get("type")
+        if user_id is None or token_type != "refresh":
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+
+    user = db.query(User).filter(User.id == user_id).first()
+    if user is None:
+        raise credentials_exception
+
+    return TokenResponse(
+        access_token=create_access_token(str(user.id)),
+        refresh_token=create_refresh_token(str(user.id)),
+    )
