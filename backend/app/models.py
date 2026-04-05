@@ -176,6 +176,28 @@ class Document(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     # embedding vectorini pgvector bilan saqlaymiz (keyingi bosqichda)
 
+class TestResult(Base):
+    __tablename__ = "test_results"
+    id           = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id      = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    test_id      = Column(String(50), nullable=False)
+    test_name    = Column(String(200), nullable=False)
+    score        = Column(Integer, nullable=True)
+    result_label = Column(String(200), nullable=False)
+    result_desc  = Column(Text, nullable=True)
+    duration_sec = Column(Integer, nullable=True)
+    created_at   = Column(DateTime, default=datetime.utcnow)
+
+class ChallengeProgress(Base):
+    __tablename__ = "challenge_progress"
+    id              = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    user_id         = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    challenge_id    = Column(String(50), nullable=False)
+    challenge_title = Column(String(200), nullable=False)
+    day_number      = Column(Integer, nullable=False)
+    completed       = Column(Boolean, default=True)
+    completed_at    = Column(DateTime, default=datetime.utcnow)
+
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
     id         = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -193,15 +215,3 @@ class ChatMessage(Base):
     content    = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     session    = relationship("ChatSession", back_populates="messages")
-
-class TestResult(Base):
-    __tablename__ = "test_results"
-    id           = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id      = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
-    test_id      = Column(String(50), nullable=False)
-    test_name    = Column(String(200), nullable=False)
-    score        = Column(Integer, nullable=True)
-    result_label = Column(String(200), nullable=False)
-    result_desc  = Column(Text, nullable=True)
-    duration_sec = Column(Integer, nullable=True)
-    created_at   = Column(DateTime, default=datetime.utcnow)
