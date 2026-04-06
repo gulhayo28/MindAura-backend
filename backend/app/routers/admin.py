@@ -70,6 +70,25 @@ def get_admin_stats(
         "new_users_this_month":   new_users_this_month or 0,
     }
 
+@router.get("/recent-users")
+def get_recent_users(
+    limit: int = 5,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    users = db.query(User).order_by(desc(User.created_at)).limit(limit).all()
+    return [
+        {
+            "id": str(u.id),
+            "name": u.full_name or u.username,
+            "email": u.email,
+            "username": u.username,
+            "is_active": u.is_active,
+            "created_at": u.created_at.isoformat(),
+        }
+        for u in users
+    ]
+
 # ─── USERS ───────────────────────────────────────────
 @router.get("/users")
 def get_all_users(
@@ -219,3 +238,123 @@ def get_finance_summary(
             {"month": "Mar", "amount": 4200000},
         ]
     }
+
+from app.models import TestResult
+
+@router.get("/users/{user_id}/detail")
+def get_user_detail(
+    user_id: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Topilmadi")
+
+    # Test natijalari
+    tests = db.query(TestResult).filter(
+        TestResult.user_id == user_id
+    ).order_by(desc(TestResult.created_at)).limit(10).all()
+
+    # Challenge statistikasi
+    challenges = db.query(UserChallenge).filter(
+        UserChallenge.user_id == user_id
+    ).all()
+
+    # Bajarilgan kunlar
+    days_done = db.query(func.count(DailyProgress.id)).filter(
+        DailyProgress.user_id == user_id,
+        DailyProgress.completed == True
+    ).scalar()
+
+    return {
+        "id":           str(user.id),
+        "full_name":    user.full_name,
+        "username":     user.username,
+        "email":        user.email,
+        "level":        user.level,
+        "total_points": user.total_points,
+        "is_active":    user.is_active,
+        "created_at":   user.created_at.isoformat(),
+        "days_completed": days_done or 0,
+        "challenges_total": len(challenges),
+        "challenges_completed": len([c for c in challenges if c.status == "completed"]),
+        "test_results": [
+            {
+                "test_name":    t.test_name,
+                "result_label": t.result_label,
+                "score":        t.score,
+                "created_at":   t.created_at.isoformat(),
+            }
+            for t in tests
+        ]
+    }
+# ─── PSYCHOLOGISTS ───────────────────────────────────
+@router.get("/psychologists")
+def get_psychologists(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    from app.models import Psychologist
+    psychs = db.query(Psychologist).order_by(desc(Psychologist.created_at)).all()
+    return [
+        {
+            "id": str(p.id),
+            "full_name": p.full_name,
+            "specialization": p.specialization,
+            "experience_years": p.experience_years,
+            "bio": p.bio,
+            "phone": p.phone,
+            "email": p.email,
+            "photo_url": p.photo_url,
+            "rating": p.rating,
+            "patients_count": p.patients_count,
+            "status": p.status,
+            "created_at": p.created_at.isoformat(),
+        }
+        for p in psychs
+    ]
+
+@router.patch("/psychologists/{psych_id}/approve")
+def approve_psychologist(
+    psych_id: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    from app.models import Psychologist
+    p = db.query(Psychologist).filter(Psychologist.id == psych_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Topilmadi")
+    p.status = "approved"
+    db.commit()
+    return {"status": "approved"}
+
+@router.patch("/psychologists/{psych_id}/reject")
+def reject_psychologist(
+    psych_id: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    from app.models import Psychologist
+    p = db.query(Psychologist).filter(Psychologist.id == psych_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Topilmadi")
+    p.status = "rejected"
+    db.commit()
+    return {"status": "rejected"}
+
+@router.delete("/psychologists/{psych_id}")
+def delete_psychologist(
+    psych_id: str,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    from app.models import Psychologist
+    p = db.query(Psychologist).filter(Psychologist.id == psych_id).first()
+    if not p:
+        raise HTTPException(status_code=404, detail="Topilmadi")
+    db.delete(p)
+    db.commit()
+    return {"message": "O'chirildi"}
+
+

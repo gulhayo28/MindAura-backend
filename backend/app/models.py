@@ -215,3 +215,20 @@ class ChatMessage(Base):
     content    = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     session    = relationship("ChatSession", back_populates="messages")
+
+    class Psychologist(Base):
+        __tablename__ = "psychologists"
+
+        id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+        user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+        full_name = Column(String, nullable=False)
+        specialization = Column(String, nullable=False)
+        experience_years = Column(Integer, default=0)
+        bio = Column(Text, nullable=True)
+        phone = Column(String, nullable=True)
+        email = Column(String, nullable=True)
+        photo_url = Column(String, nullable=True)
+        rating = Column(Float, default=0.0)
+        patients_count = Column(Integer, default=0)
+        status = Column(String, default="pending")  # pending, approved, rejected
+        created_at = Column(DateTime, default=datetime.utcnow)
