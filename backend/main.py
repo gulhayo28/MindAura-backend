@@ -26,7 +26,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://mind-aura-nnau.vercel.app"],  # * emas, aniq URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -55,8 +55,5 @@ async def global_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
         status_code=500,
         content={"detail": "Server ichki xatosi yuz berdi, iltimos keyinroq urinib ko'ring"},
-        headers={
-            "Access-Control-Allow-Origin": "https://mind-aura-nnau.vercel.app",  # yoki "*" (lekin credentials bilan ishlamaydi)
-            "Access-Control-Allow-Credentials": "true",
-        }
+        
     )
