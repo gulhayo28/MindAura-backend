@@ -17,6 +17,7 @@ from app.routers import challenge_progress
 
 
 
+
 app = FastAPI(
     title="MindAura API",
     description="Psixologik yordam va shaxsiy rivojlanish platformasi",

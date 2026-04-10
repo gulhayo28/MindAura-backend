@@ -357,4 +357,102 @@ def delete_psychologist(
     db.commit()
     return {"message": "O'chirildi"}
 
+# ─── TEST STATISTIKASI ───────────────────────────────
+@router.get("/test-stats")
+def get_test_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    from app.models import TestResult
 
+    # Barcha test natijalari
+    all_results = db.query(TestResult).all()
+
+    # Har bir test bo'yicha guruhlab statistika
+    test_map = {}
+    for r in all_results:
+        key = r.test_id
+        if key not in test_map:
+            test_map[key] = {
+                "test_id":    r.test_id,
+                "test_name":  r.test_name,
+                "count":      0,
+                "total_score": 0,
+                "scores":     [],
+            }
+        test_map[key]["count"] += 1
+        if r.score is not None:
+            test_map[key]["total_score"] += r.score
+            test_map[key]["scores"].append(r.score)
+
+    result = []
+    for t in test_map.values():
+        avg = round(t["total_score"] / len(t["scores"]), 1) if t["scores"] else 0
+        result.append({
+            "test_id":   t["test_id"],
+            "test_name": t["test_name"],
+            "count":     t["count"],
+            "avg_score": avg,
+        })
+
+    # Umumiy statistika
+    total_tests_count = db.query(func.count(TestResult.id)).scalar() or 0
+    unique_tests      = len(test_map)
+    avg_score_all     = 0
+    if all_results:
+        scores = [r.score for r in all_results if r.score is not None]
+        avg_score_all = round(sum(scores) / len(scores), 1) if scores else 0
+
+    return {
+        "total_completions": total_tests_count,
+        "unique_tests":      unique_tests,
+        "avg_score":         avg_score_all,
+        "tests":             sorted(result, key=lambda x: x["count"], reverse=True),
+    }
+# ─── TEST STATISTIKASI (Admin) ────────────────────────
+@router.get("/test-stats")
+def get_test_stats(
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin)
+):
+    from app.models import TestResult
+
+    all_results = db.query(TestResult).all()
+
+    # Har bir test bo'yicha guruhlab
+    test_map = {}
+    for r in all_results:
+        key = r.test_id
+        if key not in test_map:
+            test_map[key] = {
+                "test_id":   r.test_id,
+                "test_name": r.test_name,
+                "count":     0,
+                "scores":    [],
+            }
+        test_map[key]["count"] += 1
+        if r.score is not None:
+            test_map[key]["scores"].append(r.score)
+
+    tests = []
+    for t in test_map.values():
+        scores = t["scores"]
+        avg = round(sum(scores) / len(scores), 1) if scores else 0
+        tests.append({
+            "test_id":   t["test_id"],
+            "test_name": t["test_name"],
+            "count":     t["count"],
+            "avg_score": avg,
+        })
+
+    # Umumiy ko'rsatkichlar
+    total_completions = db.query(func.count(TestResult.id)).scalar() or 0
+    all_scores = [r.score for r in all_results if r.score is not None]
+    avg_score_all = round(sum(all_scores) / len(all_scores), 1) if all_scores else 0
+
+    return {
+        "total_completions": total_completions,
+        "unique_tests":      len(test_map),
+        "avg_score":         avg_score_all,
+        "tests": sorted(tests, key=lambda x: x["count"], reverse=True),
+    }
