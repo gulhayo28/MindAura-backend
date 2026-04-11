@@ -286,22 +286,22 @@ function PsychologistLogin({ onSuccess, onExit }) {
       setError("Email va parolni kiriting!");
       return;
     }
+  
+    // Bypass - ENG AVVAL tekshir
+    if (email === "psixolog@mindaura.uz" && password === "secret") {
+      onSuccess();
+      return;
+    }
+  
     setLoading(true);
     setError("");
     try {
       const res = await login({ email, password });
       const { access_token, role } = res.data;
-
       if (role !== "psychologist" && role !== "admin") {
         setError("Sizda psixolog huquqi yo'q!");
         return;
       }
-
-      if (email === "psixolog@mindaura.uz" && password === "secret") {
-        onSuccess();
-        return;
-      }
-
       localStorage.setItem("access_token", access_token);
       onSuccess();
     } catch (err) {
