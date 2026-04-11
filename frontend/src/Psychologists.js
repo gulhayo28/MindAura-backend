@@ -12,12 +12,12 @@ import imgDilrabo from "./images/dilrabo.jpg";
 const PSYCHOLOGISTS = [
   {
     id: 1,
-    name: "Nargiza Sattarova",
-    img: imgNargiza,
+    name: "Shomuradova Nigora",
+    img: imgnigora,
     title: "Psixolog | Munosabatlar mutaxassisi",
     exp: "10+ yil", rating: 4.9, reviews: 1240, subscribers: "338K",
     tags: ["Oila munosabatlari", "Stress", "O'z-o'zini rivojlantirish", "Ayollar psixologiyasi"],
-    bio: "Nargiza Sattarova — O'zbekistonning eng taniqli psixologlaridan biri. Oilaviy munosabatlar, stress va o'z-o'zini rivojlantirish sohasida 10 yildan ortiq tajribaga ega. YouTube kanalida 338 ming obunachiga ega.",
+    bio: "Shomuradova Nigora — O'zbekistonning eng taniqli psixologlaridan biri. Oilaviy munosabatlar, stress va o'z-o'zini rivojlantirish sohasida 10 yildan ortiq tajribaga ega. YouTube kanalida 338 ming obunachiga ega.",
     youtube: "https://youtube.com/@NargizSattarova",
     telegram: "https://t.me/nargiz_sattarova",
     videos: [

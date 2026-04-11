@@ -36,6 +36,12 @@ class User(Base):
     level = Column(Integer, default=1)
     total_points = Column(Integer, default=0)
     is_active = Column(Boolean, default=True)
+    role = Column(String, default="user")  # ← QO'SHING
+    notes = Column(Text, nullable=True)    # ← QO'SHING
+    risk_level = Column(String, default="low")   # ← QO'SHING
+    mood_score = Column(Integer, default=70)     # ← QO'SHING
+    stress_score = Column(Integer, default=40)   # ← QO'SHING
+    anxiety_score = Column(Integer, default=35) 
     created_at = Column(DateTime, default=datetime.utcnow)
 
     challenges = relationship("UserChallenge", back_populates="user")

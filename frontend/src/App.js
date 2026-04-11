@@ -13,6 +13,7 @@ import AdminApp from "./AdminApp";
 import Library from "./Library";
 import Profile from './Profile';
 import PsychologistDashboard from './components/psychologist/PsychologistDashboard';
+import { login } from './api';
 
 function App() {
   return (
@@ -278,23 +279,30 @@ function PsychologistLogin({ onSuccess, onExit }) {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState("");
+  const [loading, setLoading] = React.useState(false);
 
-  const handleLogin = () => {
-    console.log("Kirish bosildi:", email, password); // ← tekshirish uchun
+  const handleLogin = async () => {
+    if (!email || !password) {
+      setError("Email va parolni kiriting!");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      const res = await login({ email, password });
+      const { access_token, role } = res.data;
 
-    const PSYCH_CREDENTIALS = [
-      { email: "psixolog@mindaura.uz", password: "psixolog123" },
-      { email: "admin@mindaura.uz", password: "admin123" },
-    ];
+      if (role !== "psychologist" && role !== "admin") {
+        setError("Sizda psixolog huquqi yo'q!");
+        return;
+      }
 
-    const found = PSYCH_CREDENTIALS.find(
-      c => c.email === email && c.password === password
-    );
-
-    if (found) {
+      localStorage.setItem("access_token", access_token);
       onSuccess();
-    } else {
+    } catch (err) {
       setError("Email yoki parol noto'g'ri!");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -326,6 +334,7 @@ function PsychologistLogin({ onSuccess, onExit }) {
             type="email"
             value={email}
             onChange={e => setEmail(e.target.value)}
+            onKeyDown={e => e.key === "Enter" && handleLogin()}
             placeholder="psixolog@mindaura.uz"
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 10,
@@ -343,8 +352,8 @@ function PsychologistLogin({ onSuccess, onExit }) {
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            placeholder="••••••••"
             onKeyDown={e => e.key === "Enter" && handleLogin()}
+            placeholder="••••••••"
             style={{
               width: "100%", padding: "10px 14px", borderRadius: 10,
               border: "1px solid #E5E7EB", fontSize: 13, outline: "none",
@@ -363,21 +372,17 @@ function PsychologistLogin({ onSuccess, onExit }) {
         )}
 
         <button
-          onClick={() => {
-            if (email === "psixolog@mindaura.uz" && password === "psixolog123") {
-              onSuccess();
-            } else {
-              alert("Email yoki parol noto'g'ri!");
-            }
-          }}
+          onClick={handleLogin}
+          disabled={loading}
           style={{
             width: "100%", padding: "11px", borderRadius: 10,
-            background: "linear-gradient(135deg, #7C3AED, #9333EA)",
+            background: loading ? "#9CA3AF" : "linear-gradient(135deg, #7C3AED, #9333EA)",
             color: "#fff", border: "none", fontSize: 14, fontWeight: 600,
-            cursor: "pointer", fontFamily: "inherit"
+            cursor: loading ? "not-allowed" : "pointer", fontFamily: "inherit",
+            marginBottom: 10
           }}
         >
-          Kirish →
+          {loading ? "Kirilmoqda..." : "Kirish →"}
         </button>
 
         <button

@@ -10,6 +10,7 @@ class UserRegister(BaseModel):
     username: str
     password: str
     full_name: Optional[str] = None
+    role: str = "user"
 
 class UserLogin(BaseModel):
     email: EmailStr
