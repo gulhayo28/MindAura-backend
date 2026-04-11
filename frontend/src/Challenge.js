@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./Challenge.css";
 import {
   Ban, BookOpen, Brain, Globe, Headphones,
@@ -7,6 +7,51 @@ import {
   Calendar, Users, Plus, X, TrendingUp
 } from "lucide-react";
 
+const BACKEND = "https://mindaura-backend-4.onrender.com";
+
+// ── API HELPERS ───────────────────────────────────────
+function authHeaders() {
+  const token = localStorage.getItem("access_token");
+  return {
+    "Content-Type": "application/json",
+    ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+  };
+}
+
+// DB dan foydalanuvchi challenge progressini olish
+async function fetchMyProgress() {
+  try {
+    const res = await fetch(`${BACKEND}/challenge-progress/my`, {
+      headers: authHeaders(),
+    });
+    if (!res.ok) return [];
+    return await res.json(); // [{ challenge_id, day_number, completed_at, ... }]
+  } catch (e) {
+    console.error("Progress olishda xato:", e);
+    return [];
+  }
+}
+
+// DB ga challenge progressini saqlash
+async function saveChallengeProgress(challengeId, challengeTitle, dayNumber) {
+  const token = localStorage.getItem("access_token");
+  if (!token) return;
+  try {
+    await fetch(`${BACKEND}/challenge-progress/`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        challenge_id: String(challengeId),
+        challenge_title: challengeTitle,
+        day_number: dayNumber,
+      }),
+    });
+  } catch (e) {
+    console.error("Saqlashda xato:", e);
+  }
+}
+
+// ── STATIC DATA ───────────────────────────────────────
 const CH_ICONS = {
   1: <Ban size={28} strokeWidth={1.5} />,
   2: <BookOpen size={28} strokeWidth={1.5} />,
@@ -145,10 +190,8 @@ function ChallengeDetail({ ch, onBack, joined, onJoin, progress, onDay }) {
   );
 }
 
-// ── CREATE MODAL ──────────────────────────────────────
 // ── SCHEDULE TRACKER ─────────────────────────────────
 function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
-  //const today = new Date().getDate();
   const TOTAL  = ch.days;
   const doneDays = Object.keys(tasksDone).filter(k => tasksDone[k]?.length === ch.tasks.length).length;
   const pct    = Math.round((doneDays / TOTAL) * 100);
@@ -180,11 +223,8 @@ function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
   return (
     <div className="sch-wrap">
       <h3 className="sch-title">{ch.days}-Day Challenge</h3>
-
       <div className="sch-main">
-        {/* LEFT */}
         <div>
-          {/* CALENDAR */}
           <div className="sch-card">
             <div className="sch-cal-head">
               {["D","S","C","P","S","J","S"].map((d,i)=>(
@@ -192,7 +232,6 @@ function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
               ))}
             </div>
             <div className="sch-cal-grid">
-              {/* offset 4 bo'sh hujayra */}
               {Array.from({length:4},(_,i)=>(
                 <div key={"e"+i} className="sch-day empty"/>
               ))}
@@ -208,7 +247,6 @@ function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
                 );
               })}
             </div>
-            {/* PROGRESS BAR */}
             <div className="sch-prog-row">
               <div>
                 <span className="sch-prog-label"><strong>{doneDays}</strong> Kun bajarildi</span>
@@ -220,7 +258,6 @@ function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
             </div>
           </div>
 
-          {/* TODAY TASKS */}
           <div className="sch-card" style={{marginTop:14}}>
             <div className="sch-tasks-head">
               <h4>Bugungi vazifalar</h4>
@@ -239,15 +276,11 @@ function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
           </div>
         </div>
 
-        {/* SIDEBAR */}
         <div className="sch-side">
-          {/* STREAK */}
           <div className="sch-card sch-streak">
             <div className="sch-streak-label">🔥 Streak</div>
             <div className="sch-streak-num">{streak} <span>Kun</span></div>
           </div>
-
-          {/* DONUT */}
           <div className="sch-card sch-donut-card">
             <h4 style={{textAlign:"center",marginBottom:14,fontSize:14,fontWeight:600,color:"#2d2060"}}>Progress</h4>
             <div className="sch-donut-wrap">
@@ -283,6 +316,7 @@ function ScheduleTracker({ ch, tasksDone, setTasksDone, isJoin, onJoin }) {
   );
 }
 
+// ── CREATE MODAL ──────────────────────────────────────
 function CreateModal({ onClose }) {
   const [form, setForm] = useState({title:"",desc:"",days:7,category:"Shaxsiy rivojlanish"});
   return (
@@ -310,12 +344,55 @@ function CreateModal({ onClose }) {
 export default function Challenge() {
   const [activeCat, setActiveCat]   = useState("Hammasi");
   const [selected, setSelected]     = useState(null);
-  const [joined, setJoined]         = useState({});
-  const [progress, setProgress]     = useState({});
   const [showCreate, setShowCreate] = useState(false);
 
-  const handleJoin = (id) => { setJoined(p=>({...p,[id]:true})); setProgress(p=>({...p,[id]:1})); };
-  const handleDay  = (cId,day) => setProgress(p=>({...p,[cId]:Math.max(p[cId]||1,day+1)}));
+  // ✅ TUZATILDI: joined va progress DB dan keladi
+  const [joined, setJoined]     = useState({});
+  const [progress, setProgress] = useState({});
+  const [loadingProgress, setLoadingProgress] = useState(true);
+
+  // ✅ Sahifa ochilganda DB dan progress o'qiladi
+  useEffect(() => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      setLoadingProgress(false);
+      return;
+    }
+
+    fetchMyProgress().then((data) => {
+      // data = [{ challenge_id, challenge_title, day_number, completed_at }, ...]
+      const newJoined = {};
+      const newProgress = {};
+
+      data.forEach((row) => {
+        const id = Number(row.challenge_id);
+        newJoined[id] = true;
+        // Eng yuqori day_number ni saqlaymiz
+        if (!newProgress[id] || row.day_number + 1 > newProgress[id]) {
+          newProgress[id] = row.day_number + 1;
+        }
+      });
+
+      setJoined(newJoined);
+      setProgress(newProgress);
+      setLoadingProgress(false);
+    });
+  }, []);
+
+  // ✅ Join qilganda DB ga yoziladi
+  const handleJoin = async (id) => {
+    const ch = ALL_CHALLENGES.find(c => c.id === id);
+    setJoined(p => ({...p, [id]: true}));
+    setProgress(p => ({...p, [id]: 1}));
+    await saveChallengeProgress(id, ch.title, 0);
+  };
+
+  // ✅ Kun bajarilganda DB ga yoziladi
+  const handleDay = async (cId, day) => {
+    const ch = ALL_CHALLENGES.find(c => c.id === cId);
+    setProgress(p => ({...p, [cId]: Math.max(p[cId] || 1, day + 1)}));
+    await saveChallengeProgress(cId, ch.title, day);
+  };
 
   if (selected) return (
     <ChallengeDetail ch={selected} onBack={()=>setSelected(null)}
@@ -340,14 +417,17 @@ export default function Challenge() {
           </button>
           <div className="ch-hero-stats-row">
             <div className="ch-hstat"><Flame size={14} color="#f59e0b"/><span>Faol challenge: <strong>{Object.keys(joined).length}</strong></span></div>
-            <div className="ch-hstat"><Calendar size={14} color="#6C5CE7"/><span>Bugun bajarildi: <strong>{totalDays}</strong></span></div>
+            <div className="ch-hstat"><Calendar size={14} color="#6C5CE7"/><span>Jami kun: <strong>{totalDays}</strong></span></div>
             <div className="ch-hstat"><Trophy size={14} color="#f59e0b"/><strong>{ALL_CHALLENGES.reduce((a,c)=>a+c.participants,0).toLocaleString()}</strong></div>
           </div>
         </div>
         <div className="ch-hero-visual">
           <div className="ch-vis-bg"/>
           <div className="ch-vis-trophy"><Trophy size={72} strokeWidth={1.2}/></div>
-          <div className="ch-vis-float"><CheckCircle size={13} color="#0d7a50"/> Bugungi vazifa bajarildi!</div>
+          {loadingProgress
+            ? <div className="ch-vis-float">⏳ Progress yuklanmoqda...</div>
+            : <div className="ch-vis-float"><CheckCircle size={13} color="#0d7a50"/> Bugungi vazifa bajarildi!</div>
+          }
         </div>
       </div>
 

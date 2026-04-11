@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import "./Chatbot.css";
 import { useAuth } from "./AuthContext";
 
-const API_BASE = "http://localhost:8000";
+const API_BASE = "https://mindaura-backend-4.onrender.com";
 
 const QUICK_QUESTIONS = [
   "Stress bilan qanday kurashish mumkin?",
@@ -15,16 +15,7 @@ const QUICK_QUESTIONS = [
 
 const WELCOME_MESSAGE = {
   role: "assistant",
-  content: `Assalomu alaykum! 👋 Men **Umid** — MindAura platformasining AI psixolog yordamchisiman.
-
-Sizga quyidagi sohalarda yordam bera olaman:
-• 🧠 Stress va tashvish bilan ishlash
-• 💙 Kayfiyat va depressiya
-• 👨‍👩‍👧 Oila va munosabatlar
-• 😴 Uyqu muammolari
-• 💪 O'z-o'zini rivojlantirish
-
-Bugun qanday yordam kerak?`,
+  content: `Assalomu alaykum! 👋 Men **Umid** — MindAura platformasining AI psixolog yordamchisiman.\n\nSizga quyidagi sohalarda yordam bera olaman:\n• 🧠 Stress va tashvish bilan ishlash\n• 💙 Kayfiyat va depressiya\n• 👨‍👩‍👧 Oila va munosabatlar\n• 😴 Uyqu muammolari\n• 💪 O'z-o'zini rivojlantirish\n\nBugun qanday yordam kerak?`,
 };
 
 function formatText(text) {
@@ -40,9 +31,7 @@ function MessageBubble({ msg }) {
   const isUser = msg.role === "user";
   return (
     <div className={`chat-msg ${isUser ? "chat-msg-user" : "chat-msg-ai"}`}>
-      {!isUser && (
-        <div className="chat-avatar">🧠</div>
-      )}
+      {!isUser && <div className="chat-avatar">🧠</div>}
       <div className={`chat-bubble ${isUser ? "chat-bubble-user" : "chat-bubble-ai"}`}>
         {isUser ? (
           <p>{msg.content}</p>
@@ -50,14 +39,10 @@ function MessageBubble({ msg }) {
           <div dangerouslySetInnerHTML={{ __html: formatText(msg.content) }} />
         )}
         {msg.sources && msg.sources.length > 0 && (
-          <div className="chat-sources">
-            📚 {msg.sources.join(", ")}
-          </div>
+          <div className="chat-sources">📚 {msg.sources.join(", ")}</div>
         )}
       </div>
-      {isUser && (
-        <div className="chat-avatar chat-avatar-user">👤</div>
-      )}
+      {isUser && <div className="chat-avatar chat-avatar-user">👤</div>}
     </div>
   );
 }
@@ -67,82 +52,108 @@ function TypingIndicator() {
     <div className="chat-msg chat-msg-ai">
       <div className="chat-avatar">🧠</div>
       <div className="chat-bubble chat-bubble-ai">
-        <div className="chat-typing">
-          <span /><span /><span />
-        </div>
+        <div className="chat-typing"><span /><span /><span /></div>
       </div>
     </div>
   );
 }
 
-let sessionCounter = 1;
-
-function createNewSession() {
-  return {
-    id: Date.now(),
-    title: `Suhbat ${sessionCounter++}`,
-    messages: [WELCOME_MESSAGE],
-    createdAt: new Date(),
-  };
-}
-
 export default function Chatbot() {
   const { user } = useAuth();
-  const [sessions, setSessions] = useState(() => [createNewSession()]);
-  const [activeId, setActiveId] = useState(() => sessions[0]?.id);
+  const [sessions, setSessions] = useState([]);
+  const [activeId, setActiveId] = useState(null);
+  const [activeMessages, setActiveMessages] = useState([WELCOME_MESSAGE]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sessionsLoading, setSessionsLoading] = useState(false);
   const [error, setError] = useState("");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
 
-  const activeSession = sessions.find(s => s.id === activeId);
-  const messages = activeSession?.messages || [];
+  const authHeaders = () => {
+    const token = localStorage.getItem("access_token");
+    return {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    };
+  };
+
+  // ✅ Sessiyalarni DBdan yukla
+  useEffect(() => {
+    if (user) loadSessions();
+  }, [user]);
+
+  const loadSessions = async () => {
+    setSessionsLoading(true);
+    try {
+      const res = await fetch(`${API_BASE}/ai/sessions`, { headers: authHeaders() });
+      if (res.ok) {
+        const data = await res.json();
+        setSessions(data);
+      }
+    } catch (e) {
+      console.log("Sessiyalar yuklanmadi:", e);
+    } finally {
+      setSessionsLoading(false);
+    }
+  };
+
+  // ✅ Sessiya xabarlarini yukla
+  const loadSessionMessages = async (sessionId) => {
+    try {
+      const res = await fetch(`${API_BASE}/ai/sessions/${sessionId}/messages`, {
+        headers: authHeaders(),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const msgs = data.map(m => ({ role: m.role, content: m.content }));
+        setActiveMessages([WELCOME_MESSAGE, ...msgs]);
+      }
+    } catch (e) {
+      console.log("Xabarlar yuklanmadi:", e);
+    }
+  };
+
+  const handleSelectSession = async (id) => {
+    setActiveId(id);
+    setSidebarOpen(false);
+    setError("");
+    await loadSessionMessages(id);
+  };
+
+  const handleNewSession = () => {
+    setActiveId(null);
+    setActiveMessages([WELCOME_MESSAGE]);
+    setSidebarOpen(false);
+    setError("");
+  };
+
+  // ✅ Sessiyani o'chirish
+  const handleDeleteSession = async (id, e) => {
+    e.stopPropagation();
+    try {
+      await fetch(`${API_BASE}/ai/sessions/${id}`, {
+        method: "DELETE",
+        headers: authHeaders(),
+      });
+      setSessions(prev => prev.filter(s => s.id !== id));
+      if (id === activeId) handleNewSession();
+    } catch (e) {
+      console.log("O'chirishda xato:", e);
+    }
+  };
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, loading]);
+  }, [activeMessages, loading]);
 
-  // Textarea auto-resize
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
       inputRef.current.style.height = Math.min(inputRef.current.scrollHeight, 130) + "px";
     }
   }, [input]);
-
-  function updateSession(id, updater) {
-    setSessions(prev => prev.map(s => s.id === id ? updater(s) : s));
-  }
-
-  function handleNewSession() {
-    const s = createNewSession();
-    setSessions(prev => [s, ...prev]);
-    setActiveId(s.id);
-    setSidebarOpen(false);
-    setError("");
-  }
-
-  function handleDeleteSession(id, e) {
-    e.stopPropagation();
-    setSessions(prev => {
-      const filtered = prev.filter(s => s.id !== id);
-      if (filtered.length === 0) {
-        const s = createNewSession();
-        setActiveId(s.id);
-        return [s];
-      }
-      if (id === activeId) setActiveId(filtered[0].id);
-      return filtered;
-    });
-  }
-
-  function handleSelectSession(id) {
-    setActiveId(id);
-    setSidebarOpen(false);
-    setError("");
-  }
 
   const sendMessage = async (text) => {
     const msg = (text || input).trim();
@@ -152,38 +163,22 @@ export default function Chatbot() {
     setError("");
 
     const userMsg = { role: "user", content: msg };
-
-    // Auto-title session from first user message
-    updateSession(activeId, s => {
-      const isFirst = s.messages.filter(m => m.role === "user").length === 0;
-      return {
-        ...s,
-        title: isFirst ? msg.slice(0, 36) + (msg.length > 36 ? "…" : "") : s.title,
-        messages: [...s.messages, userMsg],
-      };
-    });
-
+    setActiveMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
-    const currentMessages = [...messages, userMsg];
-    const history = currentMessages
+    const history = activeMessages
       .filter(m => m !== WELCOME_MESSAGE)
       .slice(-14)
       .map(m => ({ role: m.role, content: m.content }));
 
-    const endpoint = user
-      ? `${API_BASE}/ai/chat`
-      : `${API_BASE}/ai/chat/anonymous`;
-
-    const token = localStorage.getItem("access_token");
-    const headers = { "Content-Type": "application/json" };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
+    const endpoint = user ? `${API_BASE}/ai/chat` : `${API_BASE}/ai/chat/anonymous`;
+    const headers = authHeaders();
 
     try {
       const res = await fetch(endpoint, {
         method: "POST",
         headers,
-        body: JSON.stringify({ message: msg, history }),
+        body: JSON.stringify({ message: msg, history, session_id: activeId }),
       });
 
       if (!res.ok) {
@@ -192,30 +187,22 @@ export default function Chatbot() {
       }
 
       const data = await res.json();
-      const aiMsg = {
-        role: "assistant",
-        content: data.reply,
-        sources: data.sources || [],
-      };
+      const aiMsg = { role: "assistant", content: data.reply, sources: data.sources || [] };
+      setActiveMessages(prev => [...prev, aiMsg]);
 
-      updateSession(activeId, s => ({
-        ...s,
-        messages: [...s.messages, aiMsg],
-      }));
-    } catch (e) {
-      if (e.message.includes("fetch") || e.message.includes("Failed")) {
-        const fallback = {
-          role: "assistant",
-          content: "Uzr, hozir server bilan bog'lanishda muammo bor. Iltimos, keyinroq urinib ko'ring yoki bevosita psixolog bilan bog'laning.",
-          sources: [],
-        };
-        updateSession(activeId, s => ({
-          ...s,
-          messages: [...s.messages, fallback],
-        }));
-      } else {
-        setError(e.message);
+      // ✅ Yangi sessiya yaratilgan bo'lsa — ro'yxatni yangilash
+      if (data.session_id && data.session_id !== activeId) {
+        setActiveId(data.session_id);
+        await loadSessions();
       }
+    } catch (e) {
+      const fallback = {
+        role: "assistant",
+        content: "Uzr, hozir server bilan bog'lanishda muammo bor. Iltimos, keyinroq urinib ko'ring.",
+        sources: [],
+      };
+      setActiveMessages(prev => [...prev, fallback]);
+      setError(e.message);
     } finally {
       setLoading(false);
       inputRef.current?.focus();
@@ -229,8 +216,8 @@ export default function Chatbot() {
     }
   };
 
-  const formatTime = (date) => {
-    const d = new Date(date);
+  const formatTime = (dateStr) => {
+    const d = new Date(dateStr);
     return d.toLocaleDateString("uz-UZ", { month: "short", day: "numeric" });
   };
 
@@ -240,13 +227,17 @@ export default function Chatbot() {
       <div className={`chat-sessions ${sidebarOpen ? "mobile-open" : ""}`}>
         <div className="chat-sessions-header">
           <h3>Suhbatlar</h3>
-          <button className="chat-new-btn" onClick={handleNewSession}>
-            ✏️ Yangi
-          </button>
+          <button className="chat-new-btn" onClick={handleNewSession}>✏️ Yangi</button>
         </div>
-
         <div className="chat-sessions-list">
-          {sessions.length === 0 ? (
+          {!user ? (
+            <div className="chat-sessions-empty">
+              <span>🔒</span>
+              Tarixni saqlash uchun kiring
+            </div>
+          ) : sessionsLoading ? (
+            <div className="chat-sessions-empty">Yuklanmoqda...</div>
+          ) : sessions.length === 0 ? (
             <div className="chat-sessions-empty">
               <span>💬</span>
               Hali suhbat yo'q
@@ -261,12 +252,13 @@ export default function Chatbot() {
                 <div className="chat-session-icon">💬</div>
                 <div className="chat-session-info">
                   <div className="chat-session-title">{s.title}</div>
-                  <div className="chat-session-meta">{formatTime(s.createdAt)}</div>
+                  <div className="chat-session-meta">
+                    {formatTime(s.created_at)} · {s.message_count} xabar
+                  </div>
                 </div>
                 <button
                   className="chat-session-del"
                   onClick={(e) => handleDeleteSession(s.id, e)}
-                  title="O'chirish"
                 >✕</button>
               </div>
             ))
@@ -276,7 +268,6 @@ export default function Chatbot() {
 
       {/* ── Main ── */}
       <div className="chatbot-main">
-        {/* Header */}
         <div className="chatbot-header">
           <div className="chatbot-header-info">
             <div className="chatbot-avatar-wrap">
@@ -291,59 +282,36 @@ export default function Chatbot() {
               </div>
             </div>
           </div>
-
           <div className="chatbot-header-actions">
             <button
               className="chatbot-action-btn"
-              onClick={() => {
-                updateSession(activeId, s => ({ ...s, messages: [WELCOME_MESSAGE] }));
-                setError("");
-              }}
-              title="Suhbatni tozalash"
-            >
-              🔄 Tozalash
-            </button>
+              onClick={() => { setActiveMessages([WELCOME_MESSAGE]); setError(""); }}
+            >🔄 Tozalash</button>
           </div>
         </div>
 
-        {/* Messages */}
         <div className="chatbot-messages">
           <div className="chat-date-divider">Bugun</div>
-
-          {messages.map((msg, i) => (
-            <MessageBubble key={i} msg={msg} />
-          ))}
-
+          {activeMessages.map((msg, i) => <MessageBubble key={i} msg={msg} />)}
           {loading && <TypingIndicator />}
-
-          {error && (
-            <div className="chatbot-error">
-              ⚠️ {error}
-            </div>
-          )}
+          {error && <div className="chatbot-error">⚠️ {error}</div>}
           <div ref={bottomRef} />
         </div>
 
-        {/* Quick questions */}
-        {messages.length <= 1 && (
+        {activeMessages.length <= 1 && (
           <div className="chatbot-quick">
             <div className="chatbot-quick-label">Tez savollar</div>
             <div className="chatbot-quick-list">
               {QUICK_QUESTIONS.map((q, i) => (
-                <button key={i} className="chatbot-quick-btn" onClick={() => sendMessage(q)}>
-                  {q}
-                </button>
+                <button key={i} className="chatbot-quick-btn" onClick={() => sendMessage(q)}>{q}</button>
               ))}
             </div>
           </div>
         )}
 
-        {/* Input */}
         <div className="chatbot-input-wrap">
           {!user && (
-            <div className="chatbot-guest-note">
-              ⚠️ Kirish qilib, suhbat tarixingizni saqlang
-            </div>
+            <div className="chatbot-guest-note">⚠️ Kirish qilib, suhbat tarixingizni saqlang</div>
           )}
           <div className="chatbot-input-row">
             <textarea
@@ -373,13 +341,7 @@ export default function Chatbot() {
         </div>
       </div>
 
-      {/* Mobile sidebar toggle */}
-      <button
-        className="chat-sidebar-toggle"
-        onClick={() => setSidebarOpen(o => !o)}
-      >
-        💬
-      </button>
+      <button className="chat-sidebar-toggle" onClick={() => setSidebarOpen(o => !o)}>💬</button>
     </div>
   );
 }

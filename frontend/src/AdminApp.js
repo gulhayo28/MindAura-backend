@@ -1,14 +1,29 @@
 import { useState, useEffect, useCallback } from "react";
 import "./Admin.css";
 
-const API = "http://localhost:8000";
+const API = "https://mindaura-backend-4.onrender.com";
 
 async function adminFetch(path, token, opts = {}) {
+  if (!token) {
+    console.error("Token yo'q, qayta login qiling");
+    sessionStorage.removeItem("adm_auth");
+    sessionStorage.removeItem("adm_token");
+    window.location.reload();
+    return null;
+  }
   try {
     const res = await fetch(API + path, {
       ...opts,
       headers: { "Authorization": `Bearer ${token}`, "Content-Type": "application/json", ...opts.headers }
     });
+    // ✅ 401 bo'lsa token eskirgan — avtomatik logout
+    if (res.status === 401) {
+      console.error("Token muddati tugagan, qayta login...");
+      sessionStorage.removeItem("adm_auth");
+      sessionStorage.removeItem("adm_token");
+      window.location.reload();
+      return null;
+    }
     if (!res.ok) throw new Error(await res.text());
     return await res.json();
   } catch (e) {
@@ -17,12 +32,9 @@ async function adminFetch(path, token, opts = {}) {
   }
 }
 
-
-// ─── ADMIN CREDENTIALS ───────────────────────────────
 const ADMIN_EMAIL    = "admin@umidnoma.uz";
 const ADMIN_PASSWORD = "Admin2025!";
 
-// ─── MOCK DATA ────────────────────────────────────────
 const MOCK_USERS = [
   { id:1,  name:"Dilnoza T.",  email:"dilnoza@mail.uz",   status:"faol",      tests:7,  joined:"12 mart 2026", lastActive:"2 daq oldin" },
   { id:2,  name:"Sardor M.",   email:"sardor@gmail.com",  status:"faol",      tests:3,  joined:"10 mart 2026", lastActive:"15 daq oldin" },
@@ -70,12 +82,17 @@ const MOCK_MESSAGES = [
   { id:5, from:"Malika B.",     text:"Ajoyib platforma, rahmat!",               time:"Kecha",        read:true,  type:"fikr"    },
 ];
 
-// ─── HELPERS ─────────────────────────────────────────
-const AvaComp = ({ name, size=28, bg="#EEECfd", color="#4A3DB5" }) => (
-  <div style={{ width:size, height:size, borderRadius:"50%", background:bg, color, fontSize:size*0.4, fontWeight:600, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-    {name[0].toUpperCase()}
-  </div>
-);
+// ─── FIX: AvaComp - name undefined bo'lsa crash bermaydi ─────────────────────
+const AvaComp = ({ name, size=28, bg="#EEECfd", color="#4A3DB5" }) => {
+  // ✅ ASOSIY TUZATMA: name undefined/null/bo'sh bo'lsa "?" ko'rsatiladi
+  const safeName = (typeof name === "string" && name.trim().length > 0) ? name.trim() : null;
+  const letter = safeName ? safeName[0].toUpperCase() : "?";
+  return (
+    <div style={{ width:size, height:size, borderRadius:"50%", background:bg, color, fontSize:size*0.4, fontWeight:600, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+      {letter}
+    </div>
+  );
+};
 
 const Badge = ({ text, type="default" }) => {
   const styles = {
@@ -89,52 +106,58 @@ const Badge = ({ text, type="default" }) => {
   return <span style={{ background:s.bg, color:s.color, borderRadius:999, fontSize:11, fontWeight:500, padding:"2px 9px" }}>{text}</span>;
 };
 
-// ─── DASHBOARD ───────────────────────────────────────
 function Dashboard({ token }) {
   const [stats, setStats] = useState(null);
-  const [activity, setActivity] = useState([]);
+  const [recentUsers, setRecentUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     Promise.all([
       adminFetch("/admin/stats", token),
-      adminFetch("/admin/activity?days=7", token),
-    ]).then(([s, a]) => {
+      adminFetch("/admin/users?limit=5", token),
+    ]).then(([s, u]) => {
       if (s) setStats(s);
-      if (a) setActivity(a);
+      if (u && Array.isArray(u)) {
+        setRecentUsers(u.slice(0, 5));
+      }
       setLoading(false);
     });
   }, [token]);
 
   const metrics = stats ? [
-    { val: stats.total_users.toLocaleString(),            label:"Jami foydalanuvchi", delta:`+${stats.new_users_this_week} bu hafta`, up:true,  color:"#6C5CE7" },
-    { val: stats.total_challenges_taken.toLocaleString(), label:"Challengelar",        delta:"Jami",                                   up:true,  color:"#0d7a50" },
-    { val: stats.total_days_completed.toLocaleString(),   label:"Bajarilgan kunlar",  delta:"Jami",                                   up:true,  color:"#b45309" },
-    { val: stats.active_users.toLocaleString(),           label:"Faol foydalanuvchi", delta:`+${stats.new_users_this_month} bu oy`,   up:true,  color:"#0369a1" },
+    { val: stats.total_users.toLocaleString(),            label:"Jami foydalanuvchi", delta:`+${stats.new_users_this_week} bu hafta`, up:true, color:"#6C5CE7" },
+    { val: stats.total_challenges_taken.toLocaleString(), label:"Challengelar",        delta:"Jami",                                  up:true, color:"#0d7a50" },
+    { val: stats.total_days_completed.toLocaleString(),   label:"Bajarilgan kunlar",  delta:"Jami",                                  up:true, color:"#b45309" },
+    { val: stats.active_users.toLocaleString(),           label:"Faol foydalanuvchi", delta:`+${stats.new_users_this_month} bu oy`,  up:true, color:"#0369a1" },
   ] : [
-    { val:"...", label:"Jami foydalanuvchi", delta:"",    up:true,  color:"#6C5CE7" },
-    { val:"...", label:"Challengelar",        delta:"",   up:true,  color:"#0d7a50" },
-    { val:"...", label:"Bajarilgan kunlar",  delta:"",    up:true,  color:"#b45309" },
-    { val:"...", label:"Faol foydalanuvchi", delta:"",    up:true,  color:"#0369a1" },
+    { val:"...", label:"Jami foydalanuvchi", delta:"", up:true, color:"#6C5CE7" },
+    { val:"...", label:"Challengelar",        delta:"", up:true, color:"#0d7a50" },
+    { val:"...", label:"Bajarilgan kunlar",  delta:"", up:true, color:"#b45309" },
+    { val:"...", label:"Faol foydalanuvchi", delta:"", up:true, color:"#0369a1" },
   ];
+
+  const formatTime = (dateStr) => {
+    if (!dateStr) return "Noma'lum";
+    const diff = Math.floor((Date.now() - new Date(dateStr)) / 1000);
+    if (diff < 60) return `${diff} soniya oldin`;
+    if (diff < 3600) return `${Math.floor(diff/60)} daqiqa oldin`;
+    if (diff < 86400) return `${Math.floor(diff/3600)} soat oldin`;
+    return `${Math.floor(diff/86400)} kun oldin`;
+  };
 
   return (
     <div>
-      {/* Metrics */}
       <div className="adm-metrics">
         {metrics.map((m,i) => (
           <div key={i} className="adm-metric">
             <div className="adm-metric-val" style={{color:m.color}}>{m.val}</div>
             <div className="adm-metric-label">{m.label}</div>
-            <div className="adm-metric-delta" style={{color: m.up?"#0d7a50":"#b91c1c"}}>
-              {m.up?"↑":"↓"} {m.delta}
-            </div>
+            <div className="adm-metric-delta" style={{color:"#0d7a50"}}>↑ {m.delta}</div>
           </div>
         ))}
       </div>
 
       <div className="adm-row2">
-        {/* Test statistics */}
         <div className="adm-card">
           <div className="adm-card-title">Eng ko'p o'tilgan testlar</div>
           {MOCK_TESTS.slice(0,5).map((t,i) => {
@@ -151,37 +174,43 @@ function Dashboard({ token }) {
           })}
         </div>
 
-        {/* Recent users */}
         <div className="adm-card">
           <div className="adm-card-title">Oxirgi foydalanuvchilar</div>
-          {MOCK_USERS.slice(0,5).map((u,i) => (
-            <div key={i} className="adm-user-row">
-              <AvaComp name={u.name}/>
-              <div style={{flex:1}}>
-                <div style={{fontSize:13,fontWeight:500}}>{u.name}</div>
-                <div style={{fontSize:11,color:"#9ca3af"}}>{u.lastActive}</div>
+          {loading ? (
+            <div style={{textAlign:"center", color:"#9ca3af", padding:16}}>Yuklanmoqda...</div>
+          ) : recentUsers.length === 0 ? (
+            <div style={{textAlign:"center", color:"#9ca3af", padding:16}}>Foydalanuvchi yo'q</div>
+          ) : recentUsers.map((u,i) => {
+            // ✅ FIX: name har doim string bo'lishini ta'minlaymiz
+            const displayName = u.full_name || u.username || u.email || "Foydalanuvchi";
+            return (
+              <div key={i} className="adm-user-row">
+                <AvaComp name={displayName} />
+                <div style={{flex:1}}>
+                  <div style={{fontSize:13, fontWeight:500}}>{displayName}</div>
+                  <div style={{fontSize:11, color:"#9ca3af"}}>{formatTime(u.created_at)}</div>
+                </div>
+                <div style={{width:7, height:7, borderRadius:"50%", background: u.is_active ? "#22c55e" : "#d1d5db"}}/>
               </div>
-              <div style={{width:7,height:7,borderRadius:"50%",background: u.status==="faol"?"#22c55e":"#d1d5db"}}/>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
-      {/* Psixolog approvals */}
       <div className="adm-card" style={{marginTop:14}}>
         <div className="adm-card-title">
           Psixolog so'rovlari
           <Badge text={`${MOCK_PSYCHS.filter(p=>p.status==="kutmoqda").length} ta kutmoqda`} type="danger"/>
         </div>
-        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+        <div style={{display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:10}}>
           {MOCK_PSYCHS.filter(p=>p.status==="kutmoqda").map((p,i) => (
             <div key={i} className="adm-psych-pending">
               <AvaComp name={p.name} size={34}/>
-              <div style={{flex:1,minWidth:0}}>
-                <div style={{fontSize:13,fontWeight:500,overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{p.name}</div>
-                <div style={{fontSize:11,color:"#9ca3af"}}>{p.spec}</div>
+              <div style={{flex:1, minWidth:0}}>
+                <div style={{fontSize:13, fontWeight:500, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap"}}>{p.name}</div>
+                <div style={{fontSize:11, color:"#9ca3af"}}>{p.spec}</div>
               </div>
-              <div style={{display:"flex",gap:5}}>
+              <div style={{display:"flex", gap:5}}>
                 <button className="adm-btn-sm adm-btn-ok">✓</button>
                 <button className="adm-btn-sm adm-btn-no">✕</button>
               </div>
@@ -193,12 +222,14 @@ function Dashboard({ token }) {
   );
 }
 
-// ─── USERS ───────────────────────────────────────────
 function Users({ token }) {
-  const [search, setSearch]   = useState("");
-  const [filter, setFilter]   = useState("barchasi");
-  const [users, setUsers]     = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [search, setSearch]     = useState("");
+  const [filter, setFilter]     = useState("barchasi");
+  const [users, setUsers]       = useState([]);
+  const [loading, setLoading]   = useState(true);
+  const [selected, setSelected] = useState(null);
+  const [detail, setDetail]     = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
 
   const loadUsers = useCallback(async () => {
     setLoading(true);
@@ -208,99 +239,208 @@ function Users({ token }) {
     const data = await adminFetch(`/admin/users?${params}`, token);
     if (data) setUsers(data.map(u => ({
       ...u,
+      // ✅ FIX: name hech qachon undefined bo'lmaydi
+      name: u.full_name || u.username || u.email || "Foydalanuvchi",
       status: u.is_active ? "faol" : "bloklangan",
-      tests: u.challenges_count,
-      joined: new Date(u.created_at).toLocaleDateString("uz-UZ"),
-      lastActive: "—",
+      joined: new Date(u.created_at).toLocaleDateString("uz-UZ", { day:"numeric", month:"short", year:"numeric" }),
     })));
     setLoading(false);
   }, [search, filter, token]);
 
   useEffect(() => { loadUsers(); }, [loadUsers]);
 
-  const filtered = users.filter(u => {
-    const matchS = u.name.toLowerCase().includes(search.toLowerCase()) || u.email.toLowerCase().includes(search.toLowerCase());
-    const matchF = filter==="barchasi" || u.status===filter;
-    return matchS && matchF;
-  });
+  const openDetail = async (u) => {
+    setSelected(u);
+    setDetailLoading(true);
+    const data = await adminFetch(`/admin/users/${u.id}/detail`, token);
+    setDetail(data);
+    setDetailLoading(false);
+  };
 
   const toggleBlock = async (id) => {
     await adminFetch(`/admin/users/${id}/block`, token, { method: "PATCH" });
     loadUsers();
+    if (selected?.id === id) setSelected(null);
+  };
+
+  const deleteUser = async (id) => {
+    if (!window.confirm("Haqiqatan o'chirasizmi?")) return;
+    await adminFetch(`/admin/users/${id}`, token, { method: "DELETE" });
+    loadUsers();
+    setSelected(null);
   };
 
   return (
-    <div>
-      <div className="adm-toolbar">
-        <div style={{display:"flex",gap:8}}>
-          <input className="adm-input" placeholder="Qidirish..." value={search} onChange={e=>setSearch(e.target.value)}/>
-          <select className="adm-select" value={filter} onChange={e=>setFilter(e.target.value)}>
-            <option value="barchasi">Barchasi</option>
-            <option value="faol">Faol</option>
-            <option value="bloklangan">Bloklangan</option>
-          </select>
+    <div style={{ display: "grid", gridTemplateColumns: selected ? "1.2fr 1fr" : "1fr", gap: 14 }}>
+      <div>
+        <div className="adm-toolbar">
+          <div style={{ display: "flex", gap: 8 }}>
+            <input className="adm-input" placeholder="Qidirish..." value={search} onChange={e => setSearch(e.target.value)} />
+            <select className="adm-select" value={filter} onChange={e => setFilter(e.target.value)}>
+              <option value="barchasi">Barchasi</option>
+              <option value="faol">Faol</option>
+              <option value="bloklangan">Bloklangan</option>
+            </select>
+          </div>
+          <div style={{ fontSize: 13, color: "#9ca3af" }}>{users.length} ta foydalanuvchi</div>
         </div>
-        <div style={{fontSize:13,color:"#9ca3af"}}>{filtered.length} ta foydalanuvchi</div>
+
+        <div className="adm-card" style={{ padding: 0, overflow: "hidden" }}>
+          {loading ? (
+            <div style={{ padding: 24, textAlign: "center", color: "#9ca3af" }}>Yuklanmoqda...</div>
+          ) : (
+            <table className="adm-table">
+              <thead>
+                <tr>
+                  <th>Foydalanuvchi</th>
+                  <th>Holat</th>
+                  <th>Daraja</th>
+                  <th>Ro'yxatdan</th>
+                  <th>Amallar</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map(u => (
+                  <tr key={u.id} style={{ cursor: "pointer", background: selected?.id === u.id ? "#f5f4fc" : "" }}
+                    onClick={() => openDetail(u)}>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
+                        <AvaComp name={u.name} size={30} />
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 500 }}>{u.name}</div>
+                          <div style={{ fontSize: 11, color: "#9ca3af" }}>{u.email}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td><Badge text={u.status === "faol" ? "Faol" : "Bloklangan"} type={u.status === "faol" ? "success" : "danger"} /></td>
+                    <td style={{ fontSize: 13 }}>⭐ {u.level}-daraja</td>
+                    <td style={{ fontSize: 12, color: "#9ca3af" }}>{u.joined}</td>
+                    <td onClick={e => e.stopPropagation()}>
+                      <div style={{ display: "flex", gap: 5 }}>
+                        <button className="adm-btn-sm"
+                          style={{ background: u.status === "faol" ? "#fee2e2" : "#e6f8f0", color: u.status === "faol" ? "#b91c1c" : "#0d7a50" }}
+                          onClick={() => toggleBlock(u.id)}>
+                          {u.status === "faol" ? "Blok" : "Ochish"}
+                        </button>
+                        <button className="adm-btn-sm" style={{ background: "#fee2e2", color: "#b91c1c" }}
+                          onClick={() => deleteUser(u.id)}>
+                          O'chir
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
-      <div className="adm-card" style={{padding:0,overflow:"hidden"}}>
-        <table className="adm-table">
-          <thead>
-            <tr>
-              <th>Foydalanuvchi</th>
-              <th>Holat</th>
-              <th>Testlar</th>
-              <th>Ro'yxatdan</th>
-              <th>Oxirgi faollik</th>
-              <th>Amallar</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.map(u => (
-              <tr key={u.id}>
-                <td>
-                  <div style={{display:"flex",alignItems:"center",gap:9}}>
-                    <AvaComp name={u.name} size={30}/>
-                    <div>
-                      <div style={{fontSize:13,fontWeight:500}}>{u.name}</div>
-                      <div style={{fontSize:11,color:"#9ca3af"}}>{u.email}</div>
+
+      {selected && (
+        <div className="adm-card" style={{ position: "sticky", top: 0, maxHeight: "85vh", overflowY: "auto" }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+            <div style={{ fontSize: 14, fontWeight: 600 }}>Batafsil</div>
+            <button onClick={() => setSelected(null)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "#9ca3af", fontSize: 18 }}>✕</button>
+          </div>
+
+          {detailLoading ? (
+            <div style={{ textAlign: "center", color: "#9ca3af", padding: 24 }}>Yuklanmoqda...</div>
+          ) : detail ? (
+            <>
+              <div style={{ textAlign: "center", marginBottom: 16 }}>
+                {/* ✅ FIX: detail.full_name || detail.username || "?" */}
+                <AvaComp name={detail.full_name || detail.username || detail.email || "Foydalanuvchi"} size={56} />
+                <div style={{ marginTop: 8, fontSize: 15, fontWeight: 600 }}>{detail.full_name || detail.username}</div>
+                <div style={{ fontSize: 12, color: "#9ca3af" }}>@{detail.username}</div>
+                <div style={{ fontSize: 12, color: "#9ca3af" }}>{detail.email}</div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
+                {[
+                  { label: "Daraja", val: `⭐ ${detail.level}` },
+                  { label: "Ball", val: detail.total_points },
+                  { label: "Bajarilgan kunlar", val: detail.days_completed },
+                  { label: "Challengelar", val: `${detail.challenges_completed}/${detail.challenges_total}` },
+                ].map((s, i) => (
+                  <div key={i} style={{ background: "#f5f4fc", borderRadius: 8, padding: "8px 12px", textAlign: "center" }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: "#6C5CE7" }}>{s.val}</div>
+                    <div style={{ fontSize: 11, color: "#9ca3af" }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 8 }}>Test natijalari</div>
+              {detail.test_results?.length === 0 ? (
+                <div style={{ fontSize: 12, color: "#9ca3af", textAlign: "center", padding: 12 }}>Hali test o'tilmagan</div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {detail.test_results?.map((t, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "7px 10px", background: "#f5f4fc", borderRadius: 8 }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 500 }}>{t.test_name}</div>
+                        <div style={{ fontSize: 11, color: "#9ca3af" }}>
+                          {new Date(t.created_at).toLocaleDateString("uz-UZ", { day: "numeric", month: "short" })}
+                        </div>
+                      </div>
+                      <Badge text={t.result_label} type="default" />
                     </div>
-                  </div>
-                </td>
-                <td><Badge text={u.status==="faol"?"Faol":"Bloklangan"} type={u.status==="faol"?"success":"danger"}/></td>
-                <td style={{fontSize:13,color:"#6b7280"}}>{u.tests} ta</td>
-                <td style={{fontSize:12,color:"#9ca3af"}}>{u.joined}</td>
-                <td style={{fontSize:12,color:"#9ca3af"}}>{u.lastActive}</td>
-                <td>
-                  <div style={{display:"flex",gap:5}}>
-                    <button className="adm-btn-sm" style={{background:"#f5f4fc",color:"#6C5CE7"}}>Ko'rish</button>
-                    <button className="adm-btn-sm" onClick={()=>toggleBlock(u.id)}
-                      style={{background: u.status==="faol"?"#fee2e2":"#e6f8f0", color: u.status==="faol"?"#b91c1c":"#0d7a50"}}>
-                      {u.status==="faol"?"Blok":"Ochish"}
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                <button className="adm-btn" style={{ flex: 1, background: detail.is_active ? "#fee2e2" : "#e6f8f0", color: detail.is_active ? "#b91c1c" : "#0d7a50" }}
+                  onClick={() => toggleBlock(detail.id)}>
+                  {detail.is_active ? "🚫 Bloklash" : "✅ Ochish"}
+                </button>
+                <button className="adm-btn" style={{ flex: 1, background: "#fee2e2", color: "#b91c1c" }}
+                  onClick={() => deleteUser(detail.id)}>
+                  🗑 O'chirish
+                </button>
+              </div>
+            </>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
 
-// ─── PSYCHOLOGISTS ───────────────────────────────────
-function Psychologists() {
-  const [psychs, setPsychs] = useState(MOCK_PSYCHS);
+function Psychologists({ token }) {
+  const [psychs, setPsychs] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const approve = (id) => setPsychs(prev => prev.map(p => p.id===id ? {...p, status:"tasdiqlangan"} : p));
-  const reject  = (id) => setPsychs(prev => prev.filter(p => p.id!==id));
+  const loadPsychs = async () => {
+    setLoading(true);
+    const data = await adminFetch("/admin/psychologists", token);
+    if (data) setPsychs(data.map(p => ({
+      ...p,
+      // ✅ FIX: psixolog name ham himoyalangan
+      name: p.full_name || p.name || p.username || "Psixolog",
+    })));
+    setLoading(false);
+  };
+
+  useEffect(() => { loadPsychs(); }, []);
+
+  const approve = async (id) => {
+    await adminFetch(`/admin/psychologists/${id}/approve`, token, { method: "PATCH" });
+    loadPsychs();
+  };
+
+  const reject = async (id) => {
+    await adminFetch(`/admin/psychologists/${id}/reject`, token, { method: "PATCH" });
+    loadPsychs();
+  };
 
   const pending   = psychs.filter(p => p.status==="kutmoqda");
   const approved  = psychs.filter(p => p.status==="tasdiqlangan");
 
   return (
     <div>
-      {pending.length > 0 && (
+      {loading && <div style={{textAlign:"center",color:"#9ca3af",padding:24}}>Yuklanmoqda...</div>}
+      {!loading && pending.length > 0 && (
         <div className="adm-card" style={{marginBottom:14}}>
           <div className="adm-card-title">Tasdiqlash kutmoqda <Badge text={pending.length+" ta"} type="danger"/></div>
           <div style={{display:"flex",flexDirection:"column",gap:8}}>
@@ -353,59 +493,108 @@ function Psychologists() {
   );
 }
 
-// ─── TESTS ───────────────────────────────────────────
-function Tests() {
+function Tests({ token }) {
+  const [stats, setStats]   = useState(null);
+  const [tests, setTests]   = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    Promise.all([
+      adminFetch("/admin/stats", token),
+      adminFetch("/admin/tests/stats", token),
+    ]).then(([s, t]) => {
+      if (s) setStats(s);
+      if (t && Array.isArray(t)) setTests(t);
+      else if (t && t.tests) setTests(t.tests);
+      setLoading(false);
+    });
+  }, [token]);
+
+  const totalTaken   = tests.reduce((sum, t) => sum + (t.taken || t.total_taken || 0), 0);
+  const avgScore     = tests.length
+    ? Math.round(tests.reduce((sum, t) => sum + (t.avg_score || t.avgScore || 0), 0) / tests.length)
+    : 0;
+  const maxTaken     = Math.max(...tests.map(t => t.taken || t.total_taken || 1), 1);
+
   return (
     <div>
-      <div className="adm-metrics" style={{gridTemplateColumns:"repeat(3,1fr)"}}>
+      <div className="adm-metrics" style={{ gridTemplateColumns: "repeat(3,1fr)" }}>
         <div className="adm-metric">
-          <div className="adm-metric-val" style={{color:"#6C5CE7"}}>21</div>
+          <div className="adm-metric-val" style={{ color: "#6C5CE7" }}>
+            {loading ? "..." : stats?.total_tests ?? tests.length}
+          </div>
           <div className="adm-metric-label">Jami testlar</div>
         </div>
         <div className="adm-metric">
-          <div className="adm-metric-val">3,847</div>
+          <div className="adm-metric-val">
+            {loading ? "..." : totalTaken.toLocaleString()}
+          </div>
           <div className="adm-metric-label">Jami o'tishlar</div>
         </div>
         <div className="adm-metric">
-          <div className="adm-metric-val" style={{color:"#0d7a50"}}>61%</div>
+          <div className="adm-metric-val" style={{ color: "#0d7a50" }}>
+            {loading ? "..." : avgScore + "%"}
+          </div>
           <div className="adm-metric-label">O'rtacha natija</div>
         </div>
       </div>
+
       <div className="adm-card">
         <div className="adm-card-title">Testlar statistikasi</div>
-        <table className="adm-table">
-          <thead><tr><th>Test nomi</th><th>O'tilgan</th><th>O'rtacha ball</th><th>Holat</th></tr></thead>
-          <tbody>
-            {MOCK_TESTS.map(t => {
-              const pct = Math.round((t.taken/847)*100);
-              return (
-                <tr key={t.id}>
-                  <td style={{fontSize:13,fontWeight:500}}>{t.name}</td>
-                  <td>
-                    <div style={{display:"flex",alignItems:"center",gap:8}}>
-                      <div style={{flex:1,height:4,background:"#f0eeff",borderRadius:999,overflow:"hidden",minWidth:80}}>
-                        <div style={{width:pct+"%",height:"100%",background:"#6C5CE7",borderRadius:999}}/>
+        {loading ? (
+          <div style={{ textAlign: "center", color: "#9ca3af", padding: 24 }}>Yuklanmoqda...</div>
+        ) : tests.length === 0 ? (
+          <div style={{ textAlign: "center", color: "#9ca3af", padding: 24 }}>Ma'lumot yo'q</div>
+        ) : (
+          <table className="adm-table">
+            <thead>
+              <tr>
+                <th>Test nomi</th>
+                <th>O'tilgan</th>
+                <th>O'rtacha ball</th>
+                <th>Holat</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tests.map((t, i) => {
+                const taken    = t.taken ?? t.total_taken ?? 0;
+                const avgS     = t.avg_score ?? t.avgScore ?? 0;
+                const popular  = t.popular ?? (i < 2);
+                const pct      = Math.round((taken / maxTaken) * 100);
+                return (
+                  <tr key={t.id ?? i}>
+                    <td style={{ fontSize: 13, fontWeight: 500 }}>
+                      {t.name ?? t.test_name}
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                        <div style={{ flex: 1, height: 4, background: "#f0eeff", borderRadius: 999, overflow: "hidden", minWidth: 80 }}>
+                          <div style={{ width: pct + "%", height: "100%", background: "#6C5CE7", borderRadius: 999 }} />
+                        </div>
+                        <span style={{ fontSize: 12, color: "#6b7280", minWidth: 30 }}>{taken}</span>
                       </div>
-                      <span style={{fontSize:12,color:"#6b7280",minWidth:30}}>{t.taken}</span>
-                    </div>
-                  </td>
-                  <td>
-                    <span style={{fontSize:13,fontWeight:500,color: t.avgScore>=60?"#0d7a50":t.avgScore>=40?"#b45309":"#b91c1c"}}>
-                      {t.avgScore}%
-                    </span>
-                  </td>
-                  <td>{t.popular ? <Badge text="Mashhur" type="info"/> : <Badge text="Oddiy"/>}</td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                    </td>
+                    <td>
+                      <span style={{ fontSize: 13, fontWeight: 500, color: avgS >= 60 ? "#0d7a50" : avgS >= 40 ? "#b45309" : "#b91c1c" }}>
+                        {Math.round(avgS)}%
+                      </span>
+                    </td>
+                    <td>
+                      {popular
+                        ? <Badge text="Mashhur" type="info" />
+                        : <Badge text="Oddiy" />}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
     </div>
   );
 }
 
-// ─── TRAININGS ───────────────────────────────────────
 function Trainings() {
   const [trainings, setTrainings] = useState(MOCK_TRAININGS);
 
@@ -448,7 +637,6 @@ function Trainings() {
   );
 }
 
-// ─── MESSAGES ────────────────────────────────────────
 function Messages() {
   const [messages, setMessages] = useState(MOCK_MESSAGES);
   const [selected, setSelected] = useState(null);
@@ -459,7 +647,6 @@ function Messages() {
 
   return (
     <div style={{display:"grid",gridTemplateColumns:"1fr 1.4fr",gap:14,height:"calc(100vh - 160px)",minHeight:400}}>
-      {/* List */}
       <div className="adm-card" style={{padding:0,overflow:"auto"}}>
         <div style={{padding:"12px 14px",borderBottom:"0.5px solid #e5e4f0",fontSize:13,fontWeight:500}}>
           Xabarlar <Badge text={messages.filter(m=>!m.read).length+" yangi"} type="danger"/>
@@ -480,7 +667,6 @@ function Messages() {
         ))}
       </div>
 
-      {/* Detail */}
       <div className="adm-card" style={{display:"flex",flexDirection:"column"}}>
         {selected ? (
           <>
@@ -508,7 +694,6 @@ function Messages() {
   );
 }
 
-// ─── FINANCE ─────────────────────────────────────────
 function Finance({ token }) {
   const months = ["Okt","Nov","Dek","Yan","Fev","Mart"];
   const data   = [1800000, 2100000, 2400000, 2900000, 3600000, 4200000];
@@ -530,7 +715,6 @@ function Finance({ token }) {
         <div className="adm-metric"><div className="adm-metric-val" style={{color:"#b91c1c"}}>2</div><div className="adm-metric-label">Qaytarishlar</div></div>
       </div>
 
-      {/* Bar chart */}
       <div className="adm-card" style={{marginBottom:14}}>
         <div className="adm-card-title">Oylik daromad dinamikasi</div>
         <div style={{display:"flex",alignItems:"flex-end",gap:12,height:120,padding:"8px 0"}}>
@@ -565,7 +749,6 @@ function Finance({ token }) {
   );
 }
 
-// ─── LOGIN ───────────────────────────────────────────
 function AdminLogin({ onLogin }) {
   const [email, setEmail]     = useState("");
   const [password, setPassword] = useState("");
@@ -576,28 +759,29 @@ function AdminLogin({ onLogin }) {
     e.preventDefault();
     setError("");
     setLoading(true);
-      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-        try {
-          const res = await fetch("http://localhost:8000/auth/login", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-          });
-          if (res.ok) {
-            const data = await res.json();
-            sessionStorage.setItem("adm_token", data.access_token);
-          } else {
-            sessionStorage.setItem("adm_token", "mock_token");
-          }
-        } catch(e) {
-          sessionStorage.setItem("adm_token", "mock_token");
-        }
-        setLoading(false);
+  
+    try {
+      const res = await fetch("https://mindaura-backend-4.onrender.com/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      });
+  
+      const data = await res.json();
+      console.log("Login response:", data);
+  
+      if (res.ok) {
+        sessionStorage.setItem("adm_token", data.access_token);
+        sessionStorage.setItem("adm_auth", "1");
         onLogin();
       } else {
         setError("Email yoki parol noto'g'ri");
-        setLoading(false);
       }
+    } catch (e) {
+      setError("Server bilan bog'lanib bo'lmadi");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -632,7 +816,6 @@ function AdminLogin({ onLogin }) {
   );
 }
 
-// ─── LAYOUT ──────────────────────────────────────────
 const NAV_ITEMS = [
   { key:"dashboard",  label:"Dashboard",          badge:null },
   { key:"users",      label:"Foydalanuvchilar",    badge:"1,204" },
@@ -655,13 +838,22 @@ const ICONS = {
 
 function AdminLayout({ onLogout, onExit }) {
   const [active, setActive] = useState("dashboard");
+  const token = sessionStorage.getItem("adm_token");
 
-  const PAGES = { dashboard:<Dashboard token={sessionStorage.getItem("adm_token")}/>, users:<Users token={sessionStorage.getItem("adm_token")}/>, psychs:<Psychologists/>, tests:<Tests token={sessionStorage.getItem("adm_token")}/>, trainings:<Trainings/>, messages:<Messages/>, finance:<Finance token={sessionStorage.getItem("adm_token")}/> };
-  const title = NAV_ITEMS.find(n=>n.key===active)?.label || "Dashboard";
+  const PAGES = {
+    dashboard:  <Dashboard   token={token} />,
+    users:      <Users       token={token} />,
+    psychs:     <Psychologists token={token} />,
+    tests:      <Tests       token={token} />,
+    trainings:  <Trainings   token={token} />,
+    messages:   <Messages    token={token} />,
+    finance:    <Finance     token={token} />,
+  };
+
+  const title = NAV_ITEMS.find(n => n.key === active)?.label || "Dashboard";
 
   return (
     <div className="adm-layout">
-      {/* SIDEBAR */}
       <div className="adm-sidebar">
         <div className="adm-sb-logo">
           <div className="adm-sb-icon">U</div>
@@ -714,13 +906,12 @@ function AdminLayout({ onLogout, onExit }) {
             <div style={{fontSize:10,color:"#9ca3af"}}>Super admin</div>
           </div>
           <div style={{display:"flex",flexDirection:"column",gap:4}}>
-          <button onClick={onLogout} style={{background:"none",border:"none",cursor:"pointer",color:"#9ca3af",fontSize:12,textAlign:"left"}}>Chiqish</button>
-          {onExit && <button onClick={onExit} style={{background:"none",border:"none",cursor:"pointer",color:"#6C5CE7",fontSize:11,textAlign:"left"}}>← Saytga qaytish</button>}
-        </div>
+            <button onClick={onLogout} style={{background:"none",border:"none",cursor:"pointer",color:"#9ca3af",fontSize:12,textAlign:"left"}}>Chiqish</button>
+            {onExit && <button onClick={onExit} style={{background:"none",border:"none",cursor:"pointer",color:"#6C5CE7",fontSize:11,textAlign:"left"}}>← Saytga qaytish</button>}
+          </div>
         </div>
       </div>
 
-      {/* MAIN */}
       <div className="adm-main">
         <div className="adm-topbar">
           <div style={{fontSize:15,fontWeight:600,color:"#1a1a2e"}}>{title}</div>
@@ -736,7 +927,6 @@ function AdminLayout({ onLogout, onExit }) {
   );
 }
 
-// ─── MAIN EXPORT ─────────────────────────────────────
 export default function AdminApp({ onExit }) {
   const [isLoggedIn, setIsLoggedIn] = useState(() => sessionStorage.getItem("adm_auth") === "1");
 

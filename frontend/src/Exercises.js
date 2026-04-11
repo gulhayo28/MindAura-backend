@@ -1,6 +1,50 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import "./Exercises.css";
 
+const BACKEND = "https://mindaura-backend-4.onrender.com";
+
+async function saveExerciseResult(exerciseId, exerciseName, score, resultLabel) {
+  const token = localStorage.getItem("access_token");
+  if (!token) return;
+
+  const doSave = async (t) => {
+    return await fetch(`${BACKEND}/test-results/`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${t}`
+      },
+      body: JSON.stringify({
+        test_id: exerciseId,
+        test_name: exerciseName,
+        score: score,
+        result_label: resultLabel,
+        result_desc: "",
+      })
+    });
+  };
+
+  try {
+    let res = await doSave(token);
+    if (res.status === 401) {
+      const refresh_token = localStorage.getItem("refresh_token");
+      if (!refresh_token) return;
+      const refreshRes = await fetch(`${BACKEND}/auth/refresh`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ refresh_token }),
+      });
+      if (refreshRes.ok) {
+        const data = await refreshRes.json();
+        localStorage.setItem("access_token", data.access_token);
+        await doSave(data.access_token);
+      }
+    }
+  } catch (e) {
+    console.log("Saqlashda xato:", e);
+  }
+}
+
 // ═══════════════════════════════════════
 // YORDAMCHI KOMPONENTLAR
 // ═══════════════════════════════════════
@@ -103,6 +147,13 @@ function MemoryExercise({ onBack }) {
   const [result, setResult] = useState(null);
   const timerRef = useRef(null);
 
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("memory", "Xotira mashqi", result.score, label);
+    }
+  }, [result]);
+
   const startTimer = useCallback(() => {
     setStep(1); setTimer(5);
     timerRef.current = setInterval(() => {
@@ -203,6 +254,13 @@ function NumberSearchExercise({ onBack }) {
   const [highlighted, setHighlighted] = useState([]);
   const digits = NUMBER_SEQ.split("").map(Number);
 
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("numbers", "Son qidiruv", result.score, label);
+    }
+  }, [result]);
+
   const correctIndexes = [];
   for (let i = 0; i < digits.length - 2; i++) {
     if (digits[i] + digits[i + 1] + digits[i + 2] === 15) correctIndexes.push(i, i + 1, i + 2);
@@ -228,6 +286,13 @@ function NumberSearchExercise({ onBack }) {
   };
 
   const stepTitles = ["Tayyorgarlik", "Sonlarni qidiring", "Natija"];
+
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("division", "Bo'linish mashqi", result.score, label);
+    }
+  }, [result]);
 
   return (
     <ExerciseShell title="🔢 Son qidiruv" stepTitle={stepTitles[step]} totalSteps={3} currentStep={step} onBack={onBack}>
@@ -304,6 +369,13 @@ function DivisionExercise({ onBack }) {
   };
 
   const stepTitles = ["Tayyorgarlik", "Sonlarni tanlang", "Natija"];
+
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("twohands", "Ikki qo'l mashqi", result.score, label);
+    }
+  }, [result]);
 
   return (
     <ExerciseShell title="➗ Bo'linish mashqi" stepTitle={stepTitles[step]} totalSteps={3} currentStep={step} onBack={onBack}>
@@ -388,7 +460,13 @@ function TwoHandsExercise({ onBack }) {
     }, 1000);
   };
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  //useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("secondhand", "Sekund strelkasi", result.focusScore, label);
+    }
+  }, [result]);
 
   const submitCount = () => {
     const score = count >= 10 ? 3 : count >= 8 ? 2 : count >= 5 ? 1 : 0;
@@ -499,7 +577,13 @@ function SecondHandExercise({ onBack }) {
     }, 1000);
   };
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  //useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("secondhand", "Sekund strelkasi", result.focusScore, label);
+    }
+  }, [result]);
 
   const markInterruption = () => setInterruptions(c => c + 1);
 
@@ -598,7 +682,13 @@ function RouteExercise({ onBack }) {
     }, 1000);
   };
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  //useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("route", "Marshrut eslash", result.score, label);
+    }
+  }, [result]);
 
   const addToOrder = (item) => {
     setUserOrder(o => [...o, item]);
@@ -718,6 +808,12 @@ function DailyMemoryExercise({ onBack }) {
   };
 
   const stepTitles = ["Tayyorgarlik", "Savollar", "Natija"];
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("daily", "Kun yakunida xotira", result.filled, label);
+    }
+  }, [result]);
 
   return (
     <ExerciseShell title="🌙 Kun yakunida xotira" stepTitle={stepTitles[step]} totalSteps={3} currentStep={step} onBack={onBack}>
@@ -784,7 +880,13 @@ function SevenObjectsExercise({ onBack }) {
     }, 1000);
   };
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  //useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("objects7", "7 ta predmet", result.score, label);
+    }
+  }, [result]);
 
   const toggle = (label) => setSelected(s => s.includes(label) ? s.filter(x => x !== label) : [...s, label]);
 
@@ -880,7 +982,13 @@ function RoomAnalysisExercise({ onBack }) {
     }, 1000);
   };
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  //useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("room", "Xona tahlil", result.score, label);
+    }
+  }, [result]);
 
   const toggle = (label) => setAnswers(a => a.includes(label) ? a.filter(x => x !== label) : [...a, label]);
 
@@ -991,6 +1099,12 @@ function PoemAnalysisExercise({ onBack }) {
 
   const restart = () => { setStep(0); setQIndex(0); setUserAnswers([]); setResult(null); };
   const stepTitles = ["She'rni o'qing", "Savollar", "Natija"];
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("poem", "She'r tahlil", result.score, label);
+    }
+  }, [result]);
 
   return (
     <ExerciseShell title="📖 She'r tahlil" stepTitle={stepTitles[step]} totalSteps={3} currentStep={step} onBack={onBack}>
@@ -1067,6 +1181,12 @@ function HiddenNameExercise({ onBack }) {
 
   const restart = () => { setStep(0); setQIndex(0); setAnswer(""); setShowHint(false); setRevealed(false); setScores([]); setResult(null); };
   const stepTitles = ["Tayyorgarlik", "Ismlarni toping", "Natija"];
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("hidden", "Yashiringan ism", result.score, label);
+    }
+  }, [result]);
 
   return (
     <ExerciseShell title="🔍 Yashiringan ism" stepTitle={stepTitles[step]} totalSteps={3} currentStep={step} onBack={onBack}>
@@ -1166,7 +1286,13 @@ function MultiObjectExercise({ onBack }) {
     }, 1000);
   }, [initPositions]);
 
-  useEffect(() => () => clearInterval(timerRef.current), []);
+  //useEffect(() => () => clearInterval(timerRef.current), []);
+  useEffect(() => {
+    if (result) {
+      const label = result.level === "alo" ? "A'lo" : result.level === "yaxshi" ? "Yaxshi" : "Rivojlantirish kerak";
+      saveExerciseResult("multiobj", "Ko'p ob'ektlar", result.score, label);
+    }
+  }, [result]);
 
   const selectObject = (idx) => {
     if (userChoice !== null) return;

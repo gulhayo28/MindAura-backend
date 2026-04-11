@@ -1,7 +1,6 @@
 import axios from 'axios';
-
 const API = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  baseURL: 'https://mindaura-backend-4.onrender.com',
 });
 
 // Har bir so'rovga avtomatik token qo'shish
@@ -59,3 +58,10 @@ export const getRecommendations = () => API.get('/recommendations');
 export const getTrending = () => API.get('/recommendations/trending');
 
 export default API;
+
+// frontend/src/api.js (mavjud faylning oxiriga qo'shing)
+
+// ─── PSYCHOLOGIST ──────────────────────────────────────────
+export const getClients = () => API.get('/psychologist/clients');
+export const getClientDetail = (id) => API.get(`/psychologist/clients/${id}`);
+export const updateClientNotes = (id, data) => API.put(`/psychologist/clients/${id}/notes`, data);
