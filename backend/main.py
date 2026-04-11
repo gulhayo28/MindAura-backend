@@ -13,12 +13,6 @@ from app.routers import challenge_progress
 from app.routers import psychologist
 
 
-
-
-
-
-
-
 app = FastAPI(
     title="MindAura API",
     description="Psixologik yordam va shaxsiy rivojlanish platformasi",
