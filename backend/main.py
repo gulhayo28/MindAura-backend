@@ -25,7 +25,12 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://mind-aura-nnau.vercel.app"],  # * emas, aniq URL
+    allow_origins=[
+        "https://mind-aura-nnau.vercel.app",
+        "https://mind-aura-zoqt.vercel.app",
+        "https://mind-aura.vercel.app",
+        "http://localhost:3000",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
