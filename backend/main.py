@@ -31,6 +31,8 @@ app.add_middleware(
         "https://mind-aura.vercel.app",
         "http://localhost:3000",
     ],
+    # Vercel preview domenlari (har deploy yangi URL bo'lishi mumkin)
+    allow_origin_regex=r"https://mind-aura[\w-]*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
