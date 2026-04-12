@@ -14,6 +14,9 @@ import Library from "./Library";
 import Profile from './Profile';
 import PsychologistDashboard from './components/psychologist/PsychologistDashboard';
 import { login } from './api';
+import DashboardPage from './pages/DashboardPage'
+
+<Route path="/dashboard" element={<DashboardPage />} />
 
 function Navbar({ page, setPage, onLoginClick }) {
   const [open, setOpen] = useState(false);

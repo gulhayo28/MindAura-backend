@@ -11,6 +11,10 @@ from app.routers import resources
 from app.routers import test_results
 from app.routers import challenge_progress
 from app.routers import psychologist
+from app.routers.dashboard import router as dashboard_router
+from app.routers.psych_sessions import router as sessions_router
+from app.routers.psych_tasks import router as tasks_router
+from app.routers.psych_clients import router as clients_router
 
 
 app = FastAPI(
@@ -39,6 +43,10 @@ app.include_router(resources.router, prefix="/resources", tags=["Kutubxona"])
 app.include_router(test_results.router, prefix="/test-results", tags=["Test natijalari"])
 app.include_router(challenge_progress.router, prefix="/challenge-progress", tags=["Challenge progress"])
 app.include_router(psychologist.router, prefix="/psychologist", tags=["Psixolog"])
+app.include_router(dashboard_router)
+app.include_router(sessions_router)
+app.include_router(tasks_router)
+app.include_router(clients_router)
 
 Base.metadata.create_all(bind=engine)
 
