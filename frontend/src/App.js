@@ -16,7 +16,7 @@ import PsychologistDashboard from './components/psychologist/PsychologistDashboa
 import { login } from './api';
 import DashboardPage from './pages/DashboardPage'
 
-<Route path="/dashboard" element={<DashboardPage />} />
+
 
 function Navbar({ page, setPage, onLoginClick }) {
   const [open, setOpen] = useState(false);
@@ -24,6 +24,7 @@ function Navbar({ page, setPage, onLoginClick }) {
 
   const links = [
     { label: "Bosh sahifa", key: "home" },
+    { label: "Dashboard", key: "dashboard" },
     { label: "AI Chatbot", key: "chatbot" },
     { label: "Challenge", key: "challenge" },
     { label: "Psixologlar", key: "psychologists" },
@@ -411,6 +412,7 @@ export default function AppWrapper() {
       {page === "trainings"     && <Trainings />}
       {page === "library"       && <Library />}
       {page === "profile"       && <Profile user={user} />}
+      {page === 'dashboard' && <DashboardPage />}
     </div>
   );
 }
