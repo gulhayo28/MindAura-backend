@@ -1,28 +1,27 @@
-from fastapi import FastAPI
+import re
+from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
-from fastapi import Request
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, challenges, progress, community, achievements, recommendations
-from app.database import engine, Base
-from app.routers import admin         
-from app.routers import auth, challenges, progress, community, achievements, recommendations, admin
-from app.routers import ai_chat
-from app.routers import resources  
-from app.routers import test_results
-from app.routers import challenge_progress
-from app.routers import psychologist
+from app.routers import (
+    auth, challenges, progress, community,
+    achievements, recommendations, admin,
+    ai_chat, resources, test_results,
+    challenge_progress, psychologist
+)
 from app.routers.dashboard import router as dashboard_router
 from app.routers.psych_sessions import router as sessions_router
 from app.routers.psych_tasks import router as tasks_router
 from app.routers.psych_clients import router as clients_router
+from app.database import engine, Base
 
-
+# ✅ FAQAT BIR MARTA yaratilsin
 app = FastAPI(
     title="MindAura API",
     description="Psixologik yordam va shaxsiy rivojlanish platformasi",
     version="1.0.0"
 )
 
+# ✅ CORS — bitta, to'liq
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -30,14 +29,16 @@ app.add_middleware(
         "https://mind-aura-zoqt.vercel.app",
         "https://mind-aura.vercel.app",
         "http://localhost:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:3000",
     ],
-    # Vercel preview domenlari (har deploy yangi URL bo'lishi mumkin)
     allow_origin_regex=r"https://mind-aura[\w-]*\.vercel\.app$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# ✅ Routerlar
 app.include_router(auth.router, prefix="/auth", tags=["Autentifikatsiya"])
 app.include_router(challenges.router, prefix="/challenges", tags=["Challengelar"])
 app.include_router(progress.router, prefix="/progress", tags=["Progress"])
@@ -57,14 +58,37 @@ app.include_router(clients_router)
 
 Base.metadata.create_all(bind=engine)
 
+# ✅ Health check — Render uxlab qolmasligi uchun
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
 @app.get("/")
 def root():
-    return {"message": "Umidnoma API ishlayapti!", "version": "1.0.0"}
+    return {"message": "MindAura API ishlayapti!", "version": "1.0.0"}
+
+# ✅ Global exception handler — CORS headerlari bilan
+_CORS_ALLOW_ORIGINS = {
+    "https://mind-aura-nnau.vercel.app",
+    "https://mind-aura-zoqt.vercel.app",
+    "https://mind-aura.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://127.0.0.1:3000",
+}
+_CORS_VERCEL = re.compile(r"https://mind-aura[\w-]*\.vercel\.app\Z")
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    headers = {}
+    if origin in _CORS_ALLOW_ORIGINS or _CORS_VERCEL.match(origin):
+        headers = {
+            "access-control-allow-origin": origin,
+            "access-control-allow-credentials": "true",
+        }
     return JSONResponse(
         status_code=500,
-        content={"detail": "Server ichki xatosi yuz berdi, iltimos keyinroq urinib ko'ring"},
-        
+        content={"detail": "Server ichki xatosi yuz berdi"},
+        headers=headers,
     )
